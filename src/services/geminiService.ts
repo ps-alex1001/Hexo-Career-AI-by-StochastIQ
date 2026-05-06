@@ -321,8 +321,36 @@ const RESPONSE_SCHEMA = {
       },
       required: ["roleDefinition", "userEvidence"],
     },
+    projects: {
+      type: Type.ARRAY,
+      items: {
+        type: Type.OBJECT,
+        properties: {
+          title: { type: Type.STRING },
+          description: { type: Type.STRING },
+          expectedOutcome: { type: Type.STRING },
+          difficultyLabel: {
+            type: Type.STRING,
+            enum: ["Beginner", "Intermediate", "Advanced"],
+          },
+          difficultyLevel: { type: Type.INTEGER },
+          techStack: {
+            type: Type.ARRAY,
+            items: { type: Type.STRING },
+          },
+        },
+        required: [
+          "title",
+          "description",
+          "expectedOutcome",
+          "difficultyLabel",
+          "difficultyLevel",
+          "techStack",
+        ],
+      },
+    },
   },
-  required: ["targetRole", "rawSkillExtraction"],
+  required: ["targetRole", "rawSkillExtraction", "projects"],
 };
 
 export const BLUEPRINT_SCHEMA = {
@@ -442,9 +470,9 @@ export async function generateBlueprintData(
   gaps: string[],
 ): Promise<any[]> {
   const fallbackModels = [
-    "gemini-3.1-pro-preview",
     "gemini-3-flash-preview",
     "gemini-3.1-flash-lite-preview",
+    "gemini-3.1-pro-preview",
   ];
 
   let lastError: any;
@@ -637,7 +665,16 @@ Treat GitHub evidence as equal weight to resume evidence when both are present.
 
 For each skill, provide: rawProficiencyEstimate (0–100, your honest estimate of demonstrated proficiency), evidenceType (from the enum), certificationBonus (0, 3, 5, 8, or 10 from any directly relevant certifications — output separately, do not add to raw estimate), and a 1–2 sentence reasoning.
 
-PHASE 4 — SELF-AUDIT (mandatory — do not skip)
+PHASE 4 — PROJECTS
+1. Generate exactly 3 project stubs that help the candidate close their identified skill gaps.
+2. Projects must be:
+   - Beginner (difficultyLevel 1-2)
+   - Intermediate (difficultyLevel 3)
+   - Advanced (difficultyLevel 4-5)
+3. For these stubs, only provide title, description, expectedOutcome, difficultyLabel, difficultyLevel, and techStack.
+4. Do NOT generate the full blueprint/roadmap yet. Leave it out of this response.
+
+PHASE 5 — SELF-AUDIT (mandatory — do not skip)
 Answer each check. If any fails, revise before outputting.
 
 CHECK 1 — GAP MINIMUM
@@ -718,6 +755,7 @@ Do not skip the Phase 4 self-audit under any circumstance.
           strengths,
           gaps,
         },
+        projects: raw.projects,
       } as AnalysisResponse;
     } catch (error: any) {
       lastError = error;
@@ -743,6 +781,100 @@ Do not skip the Phase 4 self-audit under any circumstance.
         }
         throw new Error(
           error?.message || "Failed to analyze resume. Please try again.",
+        );
+      }
+    }
+  }
+  throw lastError;
+}
+
+export async function generateSingleProjectBlueprint(
+  targetRole: string,
+  gaps: string[],
+  projectIndex: number,
+): Promise<any> {
+  const fallbackModels = [
+    "gemini-3-flash-preview",
+    "gemini-3.1-flash-lite-preview",
+    "gemini-3.1-pro-preview",
+  ];
+
+  const difficultyTiers = ["Beginner", "Intermediate", "Advanced"];
+  const targetDifficulty = difficultyTiers[projectIndex] || "Intermediate";
+
+  let lastError: any;
+  for (let attempt = 0; attempt < fallbackModels.length; attempt++) {
+    const currentModel = fallbackModels[attempt];
+    try {
+      const response = await ai.models.generateContent({
+        model: currentModel,
+        contents: `TARGET ROLE: ${targetRole}\nGAPS IDENTIFIED:\n${gaps.join("\n")}\nTARGET DIFFICULTY: ${targetDifficulty}`,
+        config: {
+          systemInstruction: `
+You are a senior technical mentor creating a personalized learning and project execution blueprint for a candidate.
+Your goal is to provide a specific project that helps the candidate close their identified skill gaps and reach the target role.
+
+Generate exactly 1 project targeting the ${targetDifficulty} difficulty tier.
+
+Requirements:
+- The project must target at least one identified gap skill.
+- State explicitly in the description which gap it closes.
+- Projects must be buildable, specific, and scoped.
+- The project must be decomposed into 5-8 granular, tactical steps. A "minimal" 3-step approach is insufficient; provide an "optimal" roadmap that covers the full architectural and implementation lifecycle.
+
+Per blueprint step provide:
+- 3-5 free resources specific to that step
+- 2-3 premium resources specific to that step
+- Resources must be real and currently accessible
+- If uncertain a resource exists, describe the resource type instead of naming it
+
+Blueprint step formatting rules:
+- Concise, readable, actionable
+- Use Markdown: bullet points and numbered lists
+- NO code blocks, code snippets, or programming examples
+- High-level implementation steps and architecture decisions only
+- No walls of text
+
+Always return valid JSON matching the provided schema. The JSON should be an object with a "projects" array containing exactly ONE project object.
+`,
+          responseMimeType: "application/json",
+          responseSchema: BLUEPRINT_SCHEMA,
+        },
+      });
+
+      const text = response.text || "";
+      const sanitizedText = text
+        .replace(/```json\n?/, "")
+        .replace(/```\n?/, "")
+        .trim();
+
+      const raw = JSON.parse(sanitizedText);
+      if (raw.projects && raw.projects.length > 0) {
+        return raw.projects[0];
+      }
+      throw new Error("No projects returned in the response.");
+    } catch (error: any) {
+      lastError = error;
+      const isRateLimit =
+        error?.status === 429 ||
+        error?.message?.includes("429") ||
+        error?.message?.includes("quota");
+      if (attempt < fallbackModels.length - 1) {
+        if (isRateLimit) {
+          const delay = Math.pow(2, attempt) * 1000;
+          await new Promise((resolve) => setTimeout(resolve, delay));
+        }
+        continue;
+      }
+
+      if (attempt === fallbackModels.length - 1) {
+        if (isRateLimit) {
+          throw new Error(
+            "The AI service is currently at maximum capacity. Please wait a minute and try again.",
+          );
+        }
+        throw new Error(
+          error?.message || "Failed to generate single project blueprint. Please try again.",
         );
       }
     }

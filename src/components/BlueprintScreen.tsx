@@ -45,7 +45,7 @@ export function BlueprintScreen({
 
   useEffect(() => {
     // Force scroll to top on mount and project switch
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: "smooth" });
     if (activeProject?.blueprint?.length > 0) {
       setActiveSectionId(`step-${activeProject.blueprint[0].id}`);
     }

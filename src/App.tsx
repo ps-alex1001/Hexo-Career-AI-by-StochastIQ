@@ -36,7 +36,7 @@ type AppState =
   | "how-it-works";
 
 export default function App() {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
   const [currentScreen, setCurrentScreen] = useState<AppState>("landing");
   const [isLoading, setIsLoading] = useState(false);
   const [analysisData, setAnalysisData] = useState<AnalysisResponse | null>(
@@ -68,7 +68,39 @@ export default function App() {
     setIsLoading(true);
     setError(null);
     setProgress(0);
-    setStatusText("Analyzing skills and experience...");
+    setStatusText("Initializing analysis...");
+
+    let isComplete = false;
+
+    // Simulate steady progress and status text updates
+    const progressInterval = setInterval(() => {
+      setProgress((prev) => {
+        if (isComplete) return prev;
+        // Slow down progression as it gets closer to 100%
+        if (prev < 30) return prev + 0.8;
+        if (prev < 60) return prev + 0.4;
+        if (prev < 85) return prev + 0.2;
+        if (prev < 95) return prev + 0.05;
+        return prev;
+      });
+    }, 100);
+
+    const updateStatusTexts = async () => {
+      const phrases = [
+        "Parsing inputs...",
+        "Evaluating skills & experience...",
+        "Calculating core competencies...",
+        "Identifying critical gaps...",
+        "Structuring final report...",
+      ];
+      for (const phrase of phrases) {
+        if (isComplete) break;
+        await new Promise((r) => setTimeout(r, 2000));
+        if (!isComplete) setStatusText(phrase);
+      }
+    };
+
+    updateStatusTexts();
 
     try {
       const data = await analyzeResumeAndJob(
@@ -78,6 +110,24 @@ export default function App() {
         githubData,
       );
 
+      // Sort projects by difficulty tier to ensure consistent order (Beginner -> Intermediate -> Advanced)
+      const tierMap: Record<string, number> = {
+        Beginner: 0,
+        Intermediate: 1,
+        Advanced: 2,
+      };
+
+      if (data.projects && data.projects.length > 0) {
+        data.projects.sort((a, b) => {
+          const levelA = tierMap[a.difficultyLabel as string] ?? 0;
+          const levelB = tierMap[b.difficultyLabel as string] ?? 0;
+          if (levelA !== levelB) return levelA - levelB;
+          return (a.difficultyLevel || 0) - (b.difficultyLevel || 0);
+        });
+      }
+
+      isComplete = true;
+      clearInterval(progressInterval);
       setProgress(100);
       setStatusText("Done!");
       // Let the user see it briefly hit 100%
@@ -86,45 +136,63 @@ export default function App() {
       setAnalysisData(data);
       setCurrentScreen("dashboard");
     } catch (err) {
+      isComplete = true;
+      clearInterval(progressInterval);
       console.error("Error analyzing:", err);
       setError(
         "Analysis failed. Please ensure your inputs are descriptive and try again.",
       );
     } finally {
+      isComplete = true;
+      clearInterval(progressInterval);
       setIsLoading(false);
     }
   };
 
   const [isGeneratingBlueprint, setIsGeneratingBlueprint] = useState(false);
+  const [generatingIndices, setGeneratingIndices] = useState<number[]>([]);
 
-  const handleGenerateBlueprint = async () => {
+  const handleGenerateBlueprint = async (index: number = 0) => {
     if (!analysisData) return;
     setIsGeneratingBlueprint(true);
+    setGeneratingIndices((prev) => [...prev, index]);
     try {
-      const { generateBlueprintData } =
+      const { generateSingleProjectBlueprint } =
         await import("./services/geminiService");
-      const newProjects = await generateBlueprintData(
+      const newProject = await generateSingleProjectBlueprint(
         analysisData.targetRole,
         analysisData.skills.gaps,
+        index,
       );
-      setAnalysisData((prev) =>
-        prev ? { ...prev, projects: newProjects } : prev,
-      );
-      setCurrentScreen("blueprint");
-      setSelectedProjectIndex(0);
-      setScrollProgress(0);
+      setAnalysisData((prev) => {
+        if (!prev) return prev;
+        const projects = [...(prev.projects || [])];
+        projects[index] = { ...projects[index], ...newProject };
+        return { ...prev, projects };
+      });
     } catch (err: any) {
       console.error("Error generating blueprint:", err);
-      // Optional: show a toast or error
     } finally {
-      setIsGeneratingBlueprint(false);
+      setGeneratingIndices((prev) => {
+        const next = prev.filter((i) => i !== index);
+        if (next.length === 0) setIsGeneratingBlueprint(false);
+        return next;
+      });
     }
   };
 
-  const handleViewBlueprint = (index: number) => {
-    setSelectedProjectIndex(index);
-    setCurrentScreen("blueprint");
-    setScrollProgress(0);
+  const handleViewBlueprint = async (index: number) => {
+    if (!analysisData) return;
+    
+    const project = analysisData.projects?.[index];
+    
+    // If the project already has a blueprint, navigate
+    if (project?.blueprint && project.blueprint.length > 0) {
+      setSelectedProjectIndex(index);
+      setCurrentScreen("blueprint");
+      setScrollProgress(0);
+      return;
+    }
   };
 
   useEffect(() => {
@@ -156,13 +224,13 @@ export default function App() {
       {/* TopNavBar */}
       <nav
         className={cn(
-          "fixed top-3 left-1/2 -translate-x-1/2 w-[94%] max-w-6xl border dark:border-purple-500/20 border-black/10 dark:bg-[#090a0f]/80 bg-white/70 backdrop-blur-md z-50 transition-all duration-300 shadow-lg dark:shadow-[0_4px_30px_rgba(140,60,255,0.1)] overflow-hidden print:hidden",
+          "fixed top-3 left-1/2 -translate-x-1/2 w-[94%] max-w-6xl glass-panel z-50 transition-all duration-300 shadow-lg dark:shadow-[0_4px_30px_rgba(140,60,255,0.1)] overflow-hidden print:hidden",
           currentScreen === "blueprint"
             ? "h-28 rounded-2xl"
             : "h-14 rounded-full",
         )}
       >
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center px-8 h-14 w-full z-10 border-b border-black/5 dark:border-white/5">
+        <div className="sticky top-0 grid grid-cols-[1fr_auto_1fr] items-center px-8 h-14 w-full z-50 border-b border-black/5 dark:border-white/5">
           <div className="flex items-center">
             <button
               onClick={() => setCurrentScreen("landing")}
@@ -225,7 +293,7 @@ export default function App() {
 
         {/* Blueprint Sub-Nav (Combined) */}
         {currentScreen === "blueprint" && analysisData && (
-          <div className="h-14 flex items-center justify-between w-full px-4 md:px-8 dark:bg-purple-900/20 bg-purple-50 backdrop-blur-sm animate-in slide-in-from-top-2 duration-300 relative overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+          <div className="sticky top-14 h-14 flex items-center justify-between w-full px-4 md:px-8 dark:bg-purple-900/20 bg-purple-50 backdrop-blur-sm animate-in slide-in-from-top-2 duration-300 relative overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] z-40">
             <div className="flex items-center gap-3 md:gap-6 shrink-0">
               <button
                 onClick={() => setCurrentScreen("dashboard")}
@@ -293,7 +361,7 @@ export default function App() {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-sm rounded-2xl dark:bg-[#151515]/95 bg-[#fafafa]/95 backdrop-blur-xl border border-black/10 dark:border-white/10 p-4 flex flex-col gap-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200">
+        <div className="md:hidden fixed top-20 left-1/2 -translate-x-1/2 w-[95%] max-w-sm rounded-2xl glass-panel p-4 flex flex-col gap-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-200">
           <button
             onClick={() => {
               setCurrentScreen("workspace");
@@ -353,7 +421,12 @@ export default function App() {
         </div>
       )}
 
-      <main className="flex-grow relative flex flex-col items-center w-full pt-16">
+      <main
+        className={cn(
+          "flex-grow relative flex flex-col items-center w-full",
+          currentScreen !== "landing" && "pt-16"
+        )}
+      >
         {currentScreen === "landing" && (
           <LandingScreen
             onStartMapping={() => setCurrentScreen("workspace")}
@@ -385,6 +458,7 @@ export default function App() {
             onNewAnalysis={resetAnalysis}
             onGenerateBlueprint={handleGenerateBlueprint}
             isGeneratingBlueprint={isGeneratingBlueprint}
+            generatingIndices={generatingIndices}
           />
         )}
         {currentScreen === "blueprint" && analysisData && (

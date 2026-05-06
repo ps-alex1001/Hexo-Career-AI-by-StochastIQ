@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { ArrowRight, Brain, Search, CodeXml, Target } from "lucide-react";
 import { motion } from "motion/react";
 import {
@@ -27,10 +27,27 @@ const mockRadarData = [
 ].sort((a, b) => b.actual - a.actual);
 
 export function LandingScreen({ onStartMapping, isDark }: LandingScreenProps) {
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (containerRef.current) {
+        const rect = containerRef.current.getBoundingClientRect();
+        setMousePos({
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top,
+        });
+      }
+    };
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
+  }, []);
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="dark:bg-black/70 bg-white/70 backdrop-blur-md border dark:border-white/10 border-black/20 p-3 rounded-xl shadow-xl z-50 min-w-[140px]">
+        <div className="glass-card p-3 rounded-xl shadow-xl z-50 min-w-[140px]">
           <p className="dark:text-white text-black font-bold mb-2 uppercase tracking-wider text-[10px] font-mono border-b dark:border-white/10 border-black/20 pb-1.5">
             {label}
           </p>
@@ -62,12 +79,62 @@ export function LandingScreen({ onStartMapping, isDark }: LandingScreenProps) {
   };
 
   return (
-    <>
-      {/* Background Layer moved completely to SpaceBackground */}
+    <div ref={containerRef} className="relative w-full">
+      {/* Hexagonal Tech Grid Background - Landing Page Only */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        <div 
+          className="absolute inset-0 opacity-[0.5] dark:opacity-[0.7]"
+          style={{
+            maskImage: `url("data:image/svg+xml,%3Csvg width='60' height='104' viewBox='0 0 60 104' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 104 L0 86.6 L0 52 L30 34.6 L60 52 L60 86.6 Z M30 0 L0 17.4 L0 52 L30 69.4 L60 52 L60 17.4 Z' fill='none' stroke='white' stroke-width='0.8' opacity='0.5'/%3E%3Ccircle cx='30' cy='34.6' r='1.5' fill='white'/%3E%3Ccircle cx='0' cy='0' r='1.5' fill='white'/%3E%3Ccircle cx='60' cy='0' r='1.5' fill='white'/%3E%3Ccircle cx='0' cy='69.4' r='1.5' fill='white'/%3E%3Ccircle cx='60' cy='69.4' r='1.5' fill='white'/%3E%3Ccircle cx='30' cy='104' r='1.5' fill='white'/%3E%3C/svg%3E")`,
+            WebkitMaskImage: `url("data:image/svg+xml,%3Csvg width='60' height='104' viewBox='0 0 60 104' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 104 L0 86.6 L0 52 L30 34.6 L60 52 L60 86.6 Z M30 0 L0 17.4 L0 52 L30 69.4 L60 52 L60 17.4 Z' fill='none' stroke='white' stroke-width='0.8' opacity='0.5'/%3E%3Ccircle cx='30' cy='34.6' r='1.5' fill='white'/%3E%3Ccircle cx='0' cy='0' r='1.5' fill='white'/%3E%3Ccircle cx='60' cy='0' r='1.5' fill='white'/%3E%3Ccircle cx='0' cy='69.4' r='1.5' fill='white'/%3E%3Ccircle cx='60' cy='69.4' r='1.5' fill='white'/%3E%3Ccircle cx='30' cy='104' r='1.5' fill='white'/%3E%3C/svg%3E")`,
+            maskSize: "60px 104px",
+            WebkitMaskSize: "60px 104px",
+          }}
+        >
+          {/* Animated spinner for edge tracing */}
+          <div
+            className="absolute rounded-full animate-spin pointer-events-none mix-blend-screen"
+            style={{
+              top: mousePos.y - 400,
+              left: mousePos.x - 400,
+              width: 800,
+              height: 800,
+              background: `conic-gradient(from 0deg, transparent 0%, rgba(139, 92, 246, 0.4) 15%, transparent 30%, rgba(59, 130, 246, 0.4) 65%, transparent 80%)`,
+              animationDuration: "5s",
+              maskImage: `radial-gradient(circle at center, black 0%, transparent 60%)`,
+              WebkitMaskImage: `radial-gradient(circle at center, black 0%, transparent 60%)`,
+            }}
+          />
+          {/* Pulsing core */}
+          <div
+            className="absolute rounded-full pointer-events-none blur-sm animate-pulse"
+            style={{
+              top: mousePos.y - 400,
+              left: mousePos.x - 400,
+              width: 800,
+              height: 800,
+              background: `radial-gradient(circle at center, rgba(139, 92, 246, 0.8) 0%, rgba(59, 130, 246, 0.4) 20%, transparent 70%)`,
+              animationDuration: "3s",
+            }}
+          />
+        </div>
+        {/* Subtle static grid base */}
+        <div 
+          className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05]"
+          style={{
+            maskImage: `url("data:image/svg+xml,%3Csvg width='60' height='104' viewBox='0 0 60 104' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 104 L0 86.6 L0 52 L30 34.6 L60 52 L60 86.6 Z M30 0 L0 17.4 L0 52 L30 69.4 L60 52 L60 17.4 Z' fill='none' stroke='white' stroke-width='0.5' opacity='0.2'/%3E%3Ccircle cx='30' cy='34.6' r='1' fill='white'/%3E%3Ccircle cx='0' cy='0' r='1' fill='white'/%3E%3Ccircle cx='60' cy='0' r='1' fill='white'/%3E%3Ccircle cx='0' cy='69.4' r='1' fill='white'/%3E%3Ccircle cx='60' cy='69.4' r='1' fill='white'/%3E%3Ccircle cx='30' cy='104' r='1' fill='white'/%3E%3C/svg%3E")`,
+            WebkitMaskImage: `url("data:image/svg+xml,%3Csvg width='60' height='104' viewBox='0 0 60 104' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 104 L0 86.6 L0 52 L30 34.6 L60 52 L60 86.6 Z M30 0 L0 17.4 L0 52 L30 69.4 L60 52 L60 17.4 Z' fill='none' stroke='white' stroke-width='0.5' opacity='0.2'/%3E%3Ccircle cx='30' cy='34.6' r='1' fill='white'/%3E%3Ccircle cx='0' cy='0' r='1' fill='white'/%3E%3Ccircle cx='60' cy='0' r='1' fill='white'/%3E%3Ccircle cx='0' cy='69.4' r='1' fill='white'/%3E%3Ccircle cx='60' cy='69.4' r='1' fill='white'/%3E%3Ccircle cx='30' cy='104' r='1' fill='white'/%3E%3C/svg%3E")`,
+            background: isDark ? "white" : "black",
+            maskSize: "60px 104px",
+            WebkitMaskSize: "60px 104px",
+          }}
+        />
+      </div>
+
       <SpaceBackground isDark={isDark} />
 
       {/* Hero Section */}
-      <section className="w-full max-w-5xl mx-auto px-6 pt-8 pb-24 relative flex-grow flex flex-col items-center text-center gap-8">
+      <section className="w-full max-w-5xl mx-auto px-6 pt-24 pb-24 relative flex-grow flex flex-col items-center text-center gap-8">
         <div className="absolute top-1/2 -left-32 md:-left-64 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-purple-600/20 dark:bg-purple-600/10 blur-[100px] md:blur-[150px] rounded-full pointer-events-none -translate-y-1/2" />
         <div className="absolute top-1/2 -right-32 md:-right-64 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-600/20 dark:bg-blue-600/10 blur-[100px] md:blur-[150px] rounded-full pointer-events-none -translate-y-1/2" />
         <div className="relative z-10">
@@ -113,7 +180,7 @@ export function LandingScreen({ onStartMapping, isDark }: LandingScreenProps) {
         <div className="absolute top-1/2 -left-32 md:-left-64 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-600/20 dark:bg-blue-600/10 blur-[100px] md:blur-[150px] rounded-full pointer-events-none -translate-y-1/2" />
         <div className="absolute top-1/2 -right-32 md:-right-64 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-purple-600/20 dark:bg-purple-600/10 blur-[100px] md:blur-[150px] rounded-full pointer-events-none -translate-y-1/2" />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative z-10">
-          <div className="bg-white/60 dark:bg-[#120a1f]/60 backdrop-blur-xl border border-slate-200 dark:border-purple-500/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(180,0,255,0.08)] rounded-xl p-8 hover:bg-white/80 dark:hover:bg-[#1a0f2b]/80 transition-colors group relative overflow-hidden flex flex-col h-full">
+          <div className="glass-card p-8 hover:bg-white/50 dark:hover:bg-[#1a0f2b]/60 transition-colors group relative overflow-hidden flex flex-col h-full rounded-xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-black/5 dark:bg-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="w-12 h-12 rounded-lg bg-white/50 dark:bg-purple-900/30 backdrop-blur-xl border border-white/50 dark:border-purple-500/30 shadow-inner flex items-center justify-center mb-6 group-hover:bg-white/70 dark:group-hover:bg-purple-800/40 transition-all shrink-0">
               <Brain
@@ -136,7 +203,7 @@ export function LandingScreen({ onStartMapping, isDark }: LandingScreenProps) {
             </div>
           </div>
 
-          <div className="bg-white/60 dark:bg-[#0a0f1f]/60 backdrop-blur-xl border border-slate-200 dark:border-blue-500/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,150,255,0.08)] rounded-xl p-8 hover:bg-white/80 dark:hover:bg-[#0d142b]/80 transition-colors group relative overflow-hidden flex flex-col h-full">
+          <div className="glass-card p-8 hover:bg-white/50 dark:hover:bg-[#0d142b]/60 transition-colors group relative overflow-hidden flex flex-col h-full rounded-xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-black/5 dark:bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="w-12 h-12 rounded-lg bg-white/50 dark:bg-blue-900/30 backdrop-blur-xl border border-white/50 dark:border-blue-500/30 shadow-inner flex items-center justify-center mb-6 group-hover:bg-white/70 dark:group-hover:bg-blue-800/40 transition-all shrink-0">
               <Search
@@ -159,7 +226,7 @@ export function LandingScreen({ onStartMapping, isDark }: LandingScreenProps) {
             </div>
           </div>
 
-          <div className="bg-white/60 dark:bg-[#120a1f]/60 backdrop-blur-xl border border-slate-200 dark:border-purple-500/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(180,0,255,0.08)] rounded-xl p-8 hover:bg-white/80 dark:hover:bg-[#1a0f2b]/80 transition-colors group relative overflow-hidden flex flex-col h-full">
+          <div className="glass-card p-8 hover:bg-white/50 dark:hover:bg-[#1a0f2b]/60 transition-colors group relative overflow-hidden flex flex-col h-full rounded-xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-black/5 dark:bg-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="w-12 h-12 rounded-lg bg-white/50 dark:bg-purple-900/30 backdrop-blur-xl border border-white/50 dark:border-purple-500/30 shadow-inner flex items-center justify-center mb-6 group-hover:bg-white/70 dark:group-hover:bg-purple-800/40 transition-all shrink-0">
               <CodeXml
@@ -182,7 +249,7 @@ export function LandingScreen({ onStartMapping, isDark }: LandingScreenProps) {
             </div>
           </div>
 
-          <div className="bg-white/60 dark:bg-[#0a0f1f]/60 backdrop-blur-xl border border-slate-200 dark:border-blue-500/20 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,150,255,0.08)] rounded-xl p-8 hover:bg-white/80 dark:hover:bg-[#0d142b]/80 transition-colors group relative overflow-hidden flex flex-col h-full">
+          <div className="glass-card p-8 hover:bg-white/50 dark:hover:bg-[#0d142b]/60 transition-colors group relative overflow-hidden flex flex-col h-full rounded-xl">
             <div className="absolute top-0 left-0 w-full h-1 bg-black/5 dark:bg-blue-500/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             <div className="w-12 h-12 rounded-lg bg-white/50 dark:bg-blue-900/30 backdrop-blur-xl border border-white/50 dark:border-blue-500/30 shadow-inner flex items-center justify-center mb-6 group-hover:bg-white/70 dark:group-hover:bg-blue-800/40 transition-all shrink-0">
               <Target
@@ -211,7 +278,7 @@ export function LandingScreen({ onStartMapping, isDark }: LandingScreenProps) {
       <section className="w-full max-w-7xl mx-auto px-6 mb-32 relative z-10">
         <div className="absolute top-1/2 -left-32 md:-left-64 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-purple-600/20 dark:bg-purple-600/10 blur-[100px] md:blur-[150px] rounded-full pointer-events-none -translate-y-1/2" />
         <div className="absolute top-1/2 -right-32 md:-right-64 w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-blue-600/20 dark:bg-blue-600/10 blur-[100px] md:blur-[150px] rounded-full pointer-events-none -translate-y-1/2" />
-        <div className="flex flex-col lg:flex-row items-center gap-16 backdrop-blur-md dark:bg-blue-900/10 bg-white/10 rounded-3xl p-8 md:p-12 border dark:border-blue-500/20 border-white/40 dark:shadow-[0_0_50px_rgba(0,100,255,0.05)] shadow-2xl relative overflow-hidden">
+        <div className="flex flex-col lg:flex-row items-center gap-16 glass-panel rounded-3xl p-8 md:p-12 dark:shadow-[0_0_50px_rgba(0,100,255,0.05)] shadow-2xl relative overflow-hidden">
           <div className="flex-1 space-y-6">
             <h2 className="text-4xl md:text-5xl font-bold tracking-tight dark:text-blue-50 text-slate-800">
               See your profile clearly
@@ -242,7 +309,7 @@ export function LandingScreen({ onStartMapping, isDark }: LandingScreenProps) {
             </ul>
           </div>
 
-          <div className="flex-1 w-full max-w-md lg:max-w-none bg-white/20 dark:bg-[#0c0d15]/60 backdrop-blur-2xl border border-white/40 dark:border-blue-500/20 shadow-[0_8px_32px_rgba(0,0,0,0.1)] dark:shadow-[0_8px_32px_rgba(0,150,255,0.1)] rounded-2xl p-6 relative overflow-hidden">
+          <div className="flex-1 w-full max-w-md lg:max-w-none glass-card rounded-2xl p-6 relative overflow-hidden">
             <div className="absolute top-4 left-4 flex gap-2">
               <div className="w-3 h-3 rounded-full bg-black/50 dark:bg-black"></div>
               <div className="w-3 h-3 rounded-full bg-black/50 dark:bg-black"></div>
@@ -435,6 +502,6 @@ export function LandingScreen({ onStartMapping, isDark }: LandingScreenProps) {
           </div>
         </div>
       </section>
-    </>
+    </div>
   );
 }

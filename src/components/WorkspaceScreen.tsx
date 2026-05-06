@@ -468,7 +468,7 @@ export function WorkspaceScreen({
         {/* Resume Input Section with Tabs */}
         <div className="glass-panel border border-slate-200 dark:border-white/10 rounded-xl overflow-hidden shadow-2xl flex flex-col pointer-events-auto">
           {/* Tab Headers */}
-          <div className="dark:bg-black bg-slate-50/80 backdrop-blur-md border-b border-slate-200 dark:border-white/10 px-2 flex items-center overflow-x-auto no-scrollbar">
+          <div className="glass-panel border-b border-slate-200 dark:border-white/10 px-2 flex items-center overflow-x-auto no-scrollbar">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -491,7 +491,7 @@ export function WorkspaceScreen({
           </div>
 
           {/* Tab Content */}
-          <div className="flex relative dark:bg-black/20 bg-white/40 backdrop-blur-md min-h-[300px]">
+          <div className="flex relative dark:bg-black/10 bg-white/20 min-h-[300px]">
             <AnimatePresence mode="wait">
               <motion.div
                 key={activeTab}
@@ -733,7 +733,7 @@ export function WorkspaceScreen({
                 </span>
                 <span className="text-[11px] font-mono dark:text-white text-slate-800 font-bold tracking-widest">
                   {isLoading
-                    ? progress || 0
+                    ? Math.round(progress || 0)
                     : isScrapingTarget
                       ? 15
                       : isFetchingGithub

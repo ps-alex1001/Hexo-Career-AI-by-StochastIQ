@@ -1,16 +1,35 @@
-# Hexo Career AI
+# 🧬 Hexo Career AI | Ruthless Talent Mapping
 
-Hexo Career AI is a high-performance web application designed for precise skill gap analysis and the generation of professional trajectory blueprints. By leveraging the advanced reasoning capabilities of the Gemini 2.0 Flash model, the application provides ruthless, highly accurate assessments of a candidate's resume against a specific target role, and delivers actionable, project-based roadmaps to close any identified gaps.
+> **"Stop guessing where your career stands. Start mapping it with evidence."**
 
-## Features
+Hexo Career AI is a high-performance talent intelligence engine built to eliminate the ambiguity of manual resume screening. It leverages the reasoning power of the **Gemini 2.0 Flash** model to perform surgical skill gap analysis, resulting in a deterministic match score and an actionable project-based roadmap.
 
-- **Accurate Profile Extraction**: Upload a resume (PDF with automatic OCR fallback using Tesseract.js, or raw text) and optionally include GitHub context to evaluate real-world evidence of technical capability.
-- **Ruthless Skill Gap Analysis**: Skills are categorized into `core`, `supporting`, and `contextual` tiers. The system assesses actual demonstrated evidence rather than just keyword matching.
-- **Interactive Dashboard**: Visualize your current proficiency versus target requirements on an interactive radar chart, replete with benchmark guidelines (Junior through Staff) and AI-generated reasoning for each score.
-- **Actionable Blueprints**: Generates exactly three targeted portfolio projects (Beginner, Intermediate, Advanced) explicitly designed to close the hardest identified skill gaps, complete with free and premium learning resources.
-- **Dark/Light Mode & Glassmorphism UI**: A beautifully crafted, modern UI utilizing Tailwind CSS and Framer Motion.
+---
 
-## How to Use
+## 👨‍⚖️ Judge's Quick Guide
+
+In a market flooded with "AI keyword matchers," Hexo stands apart through its **Evidence-First Philosophy**. 
+
+### The Problem: AI Hallucinations in Recruitment
+Most AI screeners simply look for keywords or ask an LLM, "How good is this candidate?" This leads to high scores for "marketing fluff" (skills lists) and ignores real proof.
+
+### The Hexo Solution:
+1. **Zero-Trust Scoring**: Our custom algorithm penalizes claims without evidence. A listed skill is worth $1/3$ of a demonstrated one.
+2. **Deterministic Logic**: While Gemini extracts the data, the final score is computed by a rigid mathematical formula, ensuring consistency and preventing AI "niceness" or bias.
+3. **Actionable Closure**: We don't just identify gaps; we generate three tiered portfolio projects (Beginner to Advanced) designed specifically to fill them.
+
+---
+
+## 🛠 Key Features
+
+- **Multi-Source Evidence Gathering**: Processes Resume PDFs (with OCR fallback) and GitHub profiles to verify technical capability.
+- **Tiered Skill Taxonomy**: Categorizes requirements into `Core` (disqualifying), `Supporting`, and `Contextual` skills.
+- **Transparent Radar Analysis**: Every score on the dashboard includes the AI's underlying reasoning and benchmarked expectations.
+- **Step-by-Step Blueprints**: Provides targeted learning paths and project specs to bridge technical deficits.
+
+---
+
+## 🚀 How to Use
 
 1. **Enter Target Context**: Specify the role you are targeting (e.g., "Senior Machine Learning Engineer", "Frontend Developer", or simply paste a job description).
 2. **Provide Evidence**: Upload your resume in PDF format (text layer or image-based) or paste raw text. Optionally provide a GitHub username to include repository data.
@@ -18,7 +37,9 @@ Hexo Career AI is a high-performance web application designed for precise skill 
 4. **Review Results**: View your Match Percentage, Strengths, and Critical Gaps on the Dashboard screen. Hover over the nodes on the radar chart to see your score, the target score, and the exact reason you received your rating.
 5. **Follow the Blueprint**: Click "View Blueprint" to access the tailored, step-by-step project plans designed to close your technical gaps and elevate your profile.
 
-## How to Run
+---
+
+## 💻 How to Run
 
 ### Prerequisites
 - Node.js (v18+)
@@ -59,9 +80,12 @@ Hexo Career AI is a high-performance web application designed for precise skill 
    npm run build
    ```
 
-## The Scoring Algorithm — Step by Step
+## 📐 The Scoring Algorithm
 
-### Step 1: Raw Proficiency Estimate (AI's job)
+> [!IMPORTANT]
+> **Deterministic Disclaimer**: This scoring logic is explicitly decoupled from the generative AI's opinion. The AI acts only as a "data extractor." The final Match Percentage is computed via a hard-coded algebraic formula. This prevents the system from "hallucinating" high scores or being swayed by marketing-heavy resumes that lack substantive proof.
+
+### Step 1: Raw Proficiency Estimate (The Extraction)
 The Gemini model looks at your resume/GitHub and assigns each skill two values:
 - `rawProficiencyEstimate`: an honest 0–100 estimate of your actual demonstrated skill level.
 - `evidenceType`: how you demonstrated it (the quality of the proof).

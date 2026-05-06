@@ -26,8 +26,9 @@ interface DashboardScreenProps {
   data: any;
   onViewBlueprint: (projectIndex: number) => void;
   onNewAnalysis: () => void;
-  onGenerateBlueprint?: () => void;
+  onGenerateBlueprint?: (index?: number) => void;
   isGeneratingBlueprint?: boolean;
+  generatingIndices?: number[];
 }
 
 export function DashboardScreen({
@@ -36,7 +37,10 @@ export function DashboardScreen({
   onNewAnalysis,
   onGenerateBlueprint,
   isGeneratingBlueprint,
+  generatingIndices,
 }: DashboardScreenProps) {
+  const [hoveredSkill, setHoveredSkill] = React.useState<string | null>(null);
+
   if (!data) return null;
 
   // Calculate match percentage and find max gap for node focus
@@ -71,36 +75,46 @@ export function DashboardScreen({
     if (score >= 80)
       return {
         label: "STRONG MATCH",
+        range: "80-100%",
         color:
           "bg-purple-900 dark:bg-purple-50 text-white dark:text-purple-900 border-purple-200 dark:border-purple-400/30",
-        hover: "Highly qualified with excellent core competency match.",
+        advice: "You have exceeded the core requirements for this role. Focus on demonstrating leadership and architecting complex solutions during interviews.",
+        description: "Excellent proficiency across all critical domains.",
       };
     if (score >= 63)
       return {
         label: "COMPETITIVE",
+        range: "63-79%",
         color:
           "bg-purple-900 dark:bg-purple-50 text-white dark:text-purple-900 border-purple-200 dark:border-purple-400/30",
-        hover: "Solid candidate with minimal gaps to bridge.",
+        advice: "You are a strong candidate. Bridge the remaining small gaps through targeted technical deep-dives to solidify your position.",
+        description: "Solid foundational knowledge with minor gaps in specialized areas.",
       };
     if (score >= 45)
       return {
         label: "DEVELOPING",
+        range: "45-62%",
         color:
           "bg-purple-100/50 dark:bg-purple-900/30 text-purple-900 dark:text-purple-100 border-purple-200 dark:border-purple-500/20",
-        hover: "Has foundational skills but needs specific upskilling.",
+        advice: "You have the fundamental skills but need to focus on specific high-impact technologies required by the role.",
+        description: "Foundational skills are present but significant upskilling is needed.",
       };
     if (score >= 25)
       return {
         label: "EMERGING",
+        range: "25-44%",
         color:
           "bg-purple-100/50 dark:bg-purple-900/30 text-purple-900 dark:text-purple-100 border-purple-200 dark:border-purple-500/20",
-        hover: "Initial signs of potential, but requires significant training.",
+        advice: "Focus on building core competencies first. Start with the 'Junior' level projects to establish a strong base.",
+        description: "Initial potential detected, but requires intensive training.",
       };
     return {
       label: "MISALIGNED",
+      range: "0-24%",
       color:
         "bg-purple-900 dark:bg-purple-50 text-white dark:text-purple-900 border-purple-200 dark:border-purple-400/30",
-      hover: "Significant skill gaps exist for this role.",
+      advice: "Consider exploring roles that align better with your current expertise or commit to a comprehensive learning path.",
+      description: "Significant mismatch between current skills and role requirements.",
     };
   };
 
@@ -227,7 +241,7 @@ export function DashboardScreen({
         ranges[0];
 
       return (
-        <div className="dark:bg-black/70 bg-white/70 backdrop-blur-md border dark:border-white/10 border-black/20 p-4 rounded-xl shadow-xl z-50 max-w-[300px]">
+        <div className="glass-card p-4 rounded-xl shadow-xl z-50 max-w-[300px]">
           <div className="flex items-center justify-between gap-4 mb-3 pb-2 border-b dark:border-white/10 border-black/20">
             <p className="dark:text-white text-black font-bold uppercase tracking-wider text-[11px] font-mono">
               {label}
@@ -273,6 +287,11 @@ export function DashboardScreen({
               <span className="text-[10px] uppercase font-mono font-bold text-black/60 dark:text-white/60">
                 Benchmark: {currentLevel.label} level
               </span>
+              {dataPoint?.evidenceType && (
+                <span className="text-[9px] dark:text-purple-400 text-purple-600 font-bold uppercase font-mono">
+                  {dataPoint.evidenceType.replace(/_/g, " ")}
+                </span>
+              )}
             </div>
 
             <div className="w-full h-2.5 flex rounded-full overflow-hidden bg-black/5 dark:bg-black/90 mb-2 relative">
@@ -326,10 +345,10 @@ export function DashboardScreen({
     <div className="flex-grow flex flex-col items-center p-6 bg-transparent relative z-10 w-full pt-10">
       <div className="w-full max-w-6xl flex flex-col gap-8 pb-24">
         {/* Intelligence Radar Terminal */}
-        <div className="glass-panel rounded-xl overflow-hidden shadow-2xl relative">
+        <div className="glass-panel rounded-xl shadow-2xl relative">
           <div className="grid grid-cols-1 lg:grid-cols-12 relative z-10">
             {/* Left Column: Metrics */}
-            <div className="lg:col-span-4 border-r border-purple-100 dark:border-purple-500/20 p-8 flex flex-col gap-8 dark:bg-purple-900/10 bg-white/60 backdrop-blur-md">
+            <div className="lg:col-span-4 border-r border-purple-100 dark:border-purple-500/20 p-8 flex flex-col gap-8 dark:bg-purple-900/10 bg-white/30 rounded-t-xl lg:rounded-t-none lg:rounded-l-xl relative z-20">
               {/* Target Role Card */}
               <div className="relative pl-6 border-l-4 border-purple-600 dark:border-purple-400 py-2">
                 <span className="text-[10px] font-mono dark:text-purple-300/50 text-purple-900/50 uppercase tracking-widest block mb-1">
@@ -358,9 +377,27 @@ export function DashboardScreen({
                     >
                       {matchClassification.label}
                     </span>
-                    <div className="absolute left-0 bottom-full mb-2 w-48 p-2 bg-purple-900 text-white text-xs rounded shadow-xl opacity-0 group-hover/tag:opacity-100 transition-opacity pointer-events-none z-50">
-                      {matchClassification.hover}
-                      <div className="absolute top-full left-4 -mt-1 border-4 border-transparent border-t-purple-900"></div>
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 w-64 p-4 dark:bg-black/90 bg-white border border-purple-200 dark:border-purple-500/20 rounded-xl shadow-2xl opacity-0 group-hover/tag:opacity-100 transition-all duration-300 pointer-events-none z-50 transform -translate-x-2 group-hover/tag:translate-x-0 backdrop-blur-md">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[10px] font-mono font-bold text-purple-600 dark:text-purple-400 uppercase tracking-widest">
+                          Classification
+                        </span>
+                      </div>
+                      <p className="dark:text-white text-slate-900 text-xs font-bold mb-1 uppercase tracking-tight">
+                        {matchClassification.label}
+                      </p>
+                      <p className="dark:text-white/60 text-slate-600 text-[11px] leading-relaxed mb-3">
+                        {matchClassification.description}
+                      </p>
+                      <div className="pt-2 border-t border-purple-100 dark:border-purple-500/10">
+                        <span className="text-[9px] font-bold text-purple-600 dark:text-purple-400 uppercase mb-1 block">
+                          Strategic Advice:
+                        </span>
+                        <p className="dark:text-purple-100/90 text-slate-700 text-[10px] leading-relaxed italic">
+                          "{matchClassification.advice}"
+                        </p>
+                      </div>
+                      <div className="absolute right-full top-1/2 -translate-y-1/2 border-[6px] border-transparent border-r-white dark:border-r-black/90"></div>
                     </div>
                   </div>
                 </div>
@@ -404,7 +441,7 @@ export function DashboardScreen({
             </div>
 
             {/* Right Column: Visualization */}
-            <div className="lg:col-span-8 p-10 flex flex-col items-center justify-center relative overflow-hidden dark:bg-purple-900/5 bg-white/40 backdrop-blur-md">
+            <div className="lg:col-span-8 p-10 flex flex-col items-center justify-center relative z-10 dark:bg-purple-900/5 bg-white/20 rounded-b-xl lg:rounded-b-none lg:rounded-r-xl">
               <div className="w-full h-[450px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart
@@ -413,9 +450,18 @@ export function DashboardScreen({
                     outerRadius="80%"
                     data={radarData}
                   >
+                    <defs>
+                      <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2.5" result="coloredBlur" />
+                        <feMerge>
+                          <feMergeNode in="coloredBlur" />
+                          <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                      </filter>
+                    </defs>
                     <PolarGrid
                       stroke="var(--ink-border)"
-                      strokeOpacity={0.5}
+                      strokeOpacity={0.2}
                       gridType="polygon"
                       strokeWidth={1}
                     />
@@ -426,9 +472,16 @@ export function DashboardScreen({
                         fontSize: 10,
                         fontWeight: 600,
                         fontFamily: "monospace",
+                        cursor: "pointer"
                       }}
                       stroke="var(--ink-border)"
-                      strokeOpacity={0.5}
+                      strokeOpacity={0.2}
+                      onMouseEnter={(data: any) => {
+                        if (data && data.value) {
+                          setHoveredSkill(data.value);
+                        }
+                      }}
+                      onMouseLeave={() => setHoveredSkill(null)}
                     />
                     <PolarRadiusAxis
                       angle={30}
@@ -438,7 +491,7 @@ export function DashboardScreen({
                     />
                     <Tooltip
                       content={<CustomTooltip />}
-                      cursor={{ fill: "var(--ink-bg)" }}
+                      cursor={{ fill: "var(--ink-bg)", opacity: 0.1 }}
                     />
                     {/* Shadow Layer for Requirement */}
                     <Radar
@@ -448,6 +501,7 @@ export function DashboardScreen({
                       strokeWidth={1}
                       strokeDasharray="4 4"
                       fill="transparent"
+                      isAnimationActive={false}
                     />
                     {/* Vibrant Current Profile */}
                     <Radar
@@ -458,16 +512,41 @@ export function DashboardScreen({
                       fill="var(--ink-color)"
                       fillOpacity={0.15}
                       dot={(props: any) => {
+                        const isHovered = props.payload.attribute === hoveredSkill;
                         const isMaxGap =
                           props.payload.attribute === maxGapNode.attribute;
+                        
                         return (
-                          <circle
-                            cx={props.cx}
-                            cy={props.cy}
-                            r={isMaxGap ? 5 : 3}
-                            fill="var(--ink-color)"
-                            className={isMaxGap ? "animate-pulse" : ""}
-                          />
+                          <g 
+                            className="transition-all duration-300"
+                            onMouseEnter={() => setHoveredSkill(props.payload.attribute)}
+                            onMouseLeave={() => setHoveredSkill(null)}
+                          >
+                            {isHovered && (
+                              <circle
+                                cx={props.cx}
+                                cy={props.cy}
+                                r={12}
+                                fill="var(--ink-color)"
+                                fillOpacity={0.2}
+                                className="animate-pulse"
+                              />
+                            )}
+                            <circle
+                              cx={props.cx}
+                              cy={props.cy}
+                              r={isHovered ? 6 : (isMaxGap ? 5 : 3)}
+                              fill={isHovered ? "var(--ink-color)" : "var(--ink-color)"}
+                              stroke={isHovered ? "white" : "none"}
+                              strokeWidth={isHovered ? 2 : 0}
+                              className={cn(
+                                "transition-all duration-300 cursor-pointer",
+                                isMaxGap && !isHovered ? "animate-pulse" : "",
+                                isHovered ? "drop-shadow-[0_0_8px_var(--ink-color)]" : ""
+                              )}
+                              filter={isHovered ? "url(#glow)" : undefined}
+                            />
+                          </g>
                         );
                       }}
                     />
@@ -495,14 +574,21 @@ export function DashboardScreen({
               {data.skills.strengths.map(
                 (str: { name: string; matchRatio: number }, i: number) => {
                   return (
-                    <div key={i} className="flex gap-4 items-start group/item">
+                    <div key={i} className={cn(
+                      "flex gap-4 items-start group/item transition-all duration-300",
+                      hoveredSkill === str.name && "translate-x-2"
+                    )}>
                       <div
                         className={cn(
-                          "mt-1.5 w-1.5 h-1.5 rounded-full transition-transform group-hover/item:scale-150 shadow-sm bg-purple-600 dark:bg-purple-400",
+                          "mt-1.5 w-1.5 h-1.5 rounded-full transition-transform shadow-sm bg-purple-600 dark:bg-purple-400",
+                          hoveredSkill === str.name && "scale-150"
                         )}
                       ></div>
                       <div className="flex flex-col">
-                        <p className="dark:text-purple-100 text-slate-700 text-sm font-medium leading-relaxed tracking-wide flex items-center gap-2">
+                        <p className={cn(
+                          "dark:text-purple-100 text-slate-700 text-sm font-medium leading-relaxed tracking-wide flex items-center gap-2 transition-colors",
+                          hoveredSkill === str.name && "text-purple-900 dark:text-white font-bold"
+                        )}>
                           {str.name}
                         </p>
                       </div>
@@ -529,16 +615,23 @@ export function DashboardScreen({
                 const isCritical = gap.includes("!!CRITICAL!!");
                 const cleanGap = gap.replace(" !!CRITICAL!!", "");
                 return (
-                  <div key={i} className="flex gap-4 items-start group/item">
+                  <div key={i} className={cn(
+                    "flex gap-4 items-start group/item transition-all duration-300",
+                    hoveredSkill === cleanGap && "translate-x-2"
+                  )}>
                     <div
                       className={cn(
                         "mt-1.5 w-1.5 h-1.5 rounded-full group-hover/item:scale-150 transition-transform shadow-sm",
                         "bg-purple-600 dark:bg-purple-400",
-                        isCritical && "animate-pulse",
+                        (isCritical || hoveredSkill === cleanGap) && "animate-pulse",
+                        hoveredSkill === cleanGap && "scale-150"
                       )}
                     ></div>
                     <div className="flex flex-col">
-                      <p className="dark:text-purple-100 text-slate-700 text-sm font-medium leading-relaxed tracking-wide flex items-center gap-2">
+                      <p className={cn(
+                        "dark:text-purple-100 text-slate-700 text-sm font-medium leading-relaxed tracking-wide flex items-center gap-2 transition-colors",
+                        hoveredSkill === cleanGap && "text-purple-900 dark:text-white font-bold"
+                      )}>
                         {cleanGap}
                         {isCritical && (
                           <span className="flex items-center gap-1 text-[10px] font-bold font-mono animate-pulse uppercase tracking-tighter bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-100 px-1 py-0.5 rounded border border-purple-200 dark:border-purple-500/20">
@@ -586,7 +679,7 @@ export function DashboardScreen({
                 to close your skill gaps for the target role.
               </p>
               <button
-                onClick={onGenerateBlueprint}
+                onClick={() => onGenerateBlueprint?.()}
                 disabled={isGeneratingBlueprint}
                 className="px-8 py-3 rounded-full bg-purple-600 hover:bg-purple-700 text-white font-sans text-sm font-bold tracking-tight transition-all shadow-lg hover:shadow-[0_0_20px_rgba(147,51,234,0.4)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3"
               >
@@ -671,14 +764,38 @@ export function DashboardScreen({
                   </div>
 
                   <button
-                    onClick={() => onViewBlueprint(index)}
-                    className="w-full mt-auto py-3 rounded-lg bg-purple-600 dark:bg-purple-500 text-white hover:bg-purple-700 dark:hover:bg-purple-400 text-[10px] font-bold font-mono tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2 group/btn relative z-10 shadow-md border border-purple-500/20"
+                    onClick={() => {
+                      if (project.blueprint && project.blueprint.length > 0) {
+                        onViewBlueprint(index);
+                      } else {
+                        onGenerateBlueprint?.(index);
+                      }
+                    }}
+                    disabled={generatingIndices?.includes(index)}
+                    className="w-full mt-auto py-3 rounded-lg bg-purple-600 dark:bg-purple-500 text-white hover:bg-purple-700 dark:hover:bg-purple-400 text-[10px] font-bold font-mono tracking-[0.2em] uppercase transition-all flex items-center justify-center gap-2 group/btn relative z-10 shadow-md border border-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    EXECUTE_BLUEPRINT
-                    <ArrowRight
-                      size={14}
-                      className="group-hover/btn:translate-x-1 transition-transform"
-                    />
+                    {generatingIndices?.includes(index) ? (
+                      <>
+                        <div className="w-3 h-3 rounded-full border-2 border-white/30 border-t-white animate-spin"></div>
+                        GENERATING BLUEPRINT
+                      </>
+                    ) : project.blueprint && project.blueprint.length > 0 ? (
+                      <>
+                        VIEW BLUEPRINT
+                        <ArrowRight
+                          size={14}
+                          className="group-hover/btn:translate-x-1 transition-transform"
+                        />
+                      </>
+                    ) : (
+                      <>
+                        GENERATE BLUEPRINT
+                        <ArrowRight
+                          size={14}
+                          className="group-hover/btn:translate-x-1 transition-transform"
+                        />
+                      </>
+                    )}
                   </button>
                 </motion.div>
               ))}
