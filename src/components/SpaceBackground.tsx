@@ -1,10 +1,10 @@
-import React, { useMemo } from 'react';
-import { motion, useScroll, useTransform } from 'motion/react';
-import { cn } from '../lib/utils';
+import React, { useMemo } from "react";
+import { motion, useScroll, useTransform } from "motion/react";
+import { cn } from "../lib/utils";
 
 export function SpaceBackground({ isDark }: { isDark: boolean }) {
   const { scrollY } = useScroll();
-  
+
   // Parallax layers based on scroll
   const y1 = useTransform(scrollY, [0, 2000], [0, -100]);
   const y2 = useTransform(scrollY, [0, 2000], [0, -250]);
@@ -22,16 +22,19 @@ export function SpaceBackground({ isDark }: { isDark: boolean }) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden" style={{ perspective: '1000px' }}>
+    <div
+      className="fixed inset-0 z-0 pointer-events-none overflow-hidden"
+      style={{ perspective: "1000px" }}
+    >
       {/* Dust/Particles Layer */}
       {!isDark && (
         <motion.div style={{ y: y1 }} className="absolute inset-0">
-          {particles.map(p => (
+          {particles.map((p) => (
             <div
               key={`p-${p.id}`}
               className={cn(
                 "absolute rounded-full",
-                "bg-black/20 mix-blend-multiply"
+                "bg-black/20 mix-blend-multiply",
               )}
               style={{
                 left: `${p.x}vw`,
@@ -44,7 +47,6 @@ export function SpaceBackground({ isDark }: { isDark: boolean }) {
           ))}
         </motion.div>
       )}
-
     </div>
   );
 }
