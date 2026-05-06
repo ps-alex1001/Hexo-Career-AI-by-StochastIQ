@@ -69,9 +69,7 @@ The Gemini model looks at your resume/GitHub and assigns each skill two values:
 The AI is explicitly forbidden from inflating these; skills sections alone can never be higher than "mentioned".
 
 ### Step 2: Skill Score — Applying the Confidence Multiplier
-```
-S_skill = min(100, round(P_raw × M_c) + B_cert)
-```
+$$S_{skill} = \min(100, \text{round}(P_{raw} \times M_c) + B_{cert})$$
 The evidence type is converted to a confidence multiplier $M_c$:
 
 | Evidence Type | $M_c$ | What it means |
@@ -91,32 +89,22 @@ The evidence type is converted to a confidence multiplier $M_c$:
 $B_{cert}$ is an optional certification bonus (0, 3, 5, 8, or 10 points) for relevant certifications, capped at 100.
 
 **Example:** You have Python listed in a project with described outcomes (`demonstrated_strong`, $M_c = 1.0$) and the AI estimates raw proficiency at 72:
-```
-S_skill = min(100, round(72 × 1.0) + 0) = 72
-```
+$$S_{skill} = \min(100, \text{round}(72 \times 1.0) + 0) = 72$$
 Same skill, but only listed in your skills section (`mentioned`, $M_c = 0.35$):
-```
-S_skill = min(100, round(72 × 0.35) + 0) = 25
-```
+$$S_{skill} = \min(100, \text{round}(72 \times 0.35) + 0) = 25$$
 This is the algorithm's key anti-inflation mechanism — proof quality dramatically affects the score.
 
 ### Step 3: Match Ratio per Skill
-```
-R_match = S_skill / max(1, TargetProficiency)
-```
+$$R_{match} = \frac{S_{skill}}{\max(1, \text{Target Proficiency})}$$
 Each skill also has a target proficiency set by the role's seniority level:
 - **Junior core:** 55–70 | **Mid core:** 70–80 | **Senior core:** 80–90 | **Principal core:** 85–95
 
 So a score of 72 against a Senior role requiring 85:
-```
-R_match = 72 / 85 = 0.847  (~85% of target met)
-```
+$$R_{match} = 72 / 85 = 0.847 \quad (\sim 85\% \text{ of target met})$$
 
 ### Step 4: Identifying Critical Gaps
 A critical gap is flagged when:
-```
-skill.tier === "core"  AND  R_match < 0.65
-```
+$$\text{skill.tier} = \text{"core"} \quad \text{AND} \quad R_{match} < 0.65$$
 Each critical gap increments a counter used in the penalty below. Critical gaps are also bubbled to the top of the displayed gap list with a !!CRITICAL!! marker.
 
 ### Step 5: Weighted Base Score
@@ -129,20 +117,12 @@ Skills are bucketed into three tiers with fixed weights:
 | `contextual` | 0.10 |
 
 For each tier present, the average $R_{match}$ across all skills in that tier is computed, then multiplied by its weight and summed:
-```
-W_base = avg(R_match_core) × 0.60
-       + avg(R_match_supporting) × 0.30
-       + avg(R_match_contextual) × 0.10
-```
+$$W_{base} = \text{avg}(R_{\text{match, core}}) \times 0.60 + \text{avg}(R_{\text{match, supporting}}) \times 0.30 + \text{avg}(R_{\text{match, contextual}}) \times 0.10$$
 **Normalization:** If a tier is completely absent (e.g. a role has no contextual skills), the weights of only the present tiers are summed and used as the denominator:
-```
-W_normalized = W_base / sum_of_present_tier_weights
-```
+$$W_{normalized} = \frac{W_{base}}{\sum \text{present\_tier\_weights}}$$
 
 ### Step 6: Critical Gap Penalty Multiplier
-```
-M_penalty = 1 - min(0.25, NumCriticalGaps × 0.08)
-```
+$$M_{penalty} = 1 - \min(0.25, \text{NumCriticalGaps} \times 0.08)$$
 | # Critical Gaps | $M_{penalty}$ |
 | :--- | :--- |
 | 0 | 1.00 (no penalty) |
@@ -152,9 +132,7 @@ M_penalty = 1 - min(0.25, NumCriticalGaps × 0.08)
 | 4+ | 0.75 (capped at −25%) |
 
 ### Step 7: Final Match Percentage
-```
-Overall Match % = max(0, round(W_normalized × M_penalty × 100))
-```
+$$\text{Overall Match \%} = \max(0, \text{round}(W_{normalized} \times M_{penalty} \times 100))$$
 
 ### Step 8: Strength/Gap Classification
 After all scores are computed, each skill is classified using its $R_{match}$:
@@ -177,16 +155,13 @@ Suppose a Senior ML Engineer role has 3 skills:
 | MLOps | core | 80 | `mentioned` | 65 | 0.35 | 23 | 0.29 → **CRITICAL GAP** |
 | SQL | supporting | 65 | `demonstrated_weak` | 70 | 0.80 | 56 | 0.86 |
 
-```
-W_base = avg(0.94, 0.29) × 0.60  +  avg(0.86) × 0.30
-       = 0.615 × 0.60 + 0.86 × 0.30
-       = 0.369 + 0.258 = 0.627
+$$W_{base} = \text{avg}(0.94, 0.29) \times 0.60 + \text{avg}(0.86) \times 0.30$$
+$$= 0.615 \times 0.60 + 0.86 \times 0.30 = 0.369 + 0.258 = 0.627$$
 
-W_normalized = 0.627 / (0.60 + 0.30) = 0.697   (no contextual tier)
+$$W_{normalized} = 0.627 / (0.60 + 0.30) = 0.697 \quad \text{(no contextual tier)}$$
 
-M_penalty = 1 - (1 × 0.08) = 0.92              (1 critical gap)
+$$M_{penalty} = 1 - (1 \times 0.08) = 0.92 \quad \text{(1 critical gap)}$$
 
-Final = round(0.697 × 0.92 × 100) = round(64.1) = 64%
-```
+$$\text{Final} = \text{round}(0.697 \times 0.92 \times 100) = \text{round}(64.1) = 64\%$$
 Without the MLOps gap penalty, the raw weighted score would have been ~70% — the penalty correctly signals that a missing core skill is a disqualifying issue.
 
