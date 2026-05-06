@@ -59,61 +59,134 @@ Hexo Career AI is a high-performance web application designed for precise skill 
    npm run build
    ```
 
-## The Score Calculation Process
+## The Scoring Algorithm — Step by Step
 
-Hexo Career AI employs a multi-phase, rigorous scoring engine designed from a "hiring manager's perspective"—aimed at preventing false positives and ensuring candidates are truly ready for day one on the job.
+### Step 1: Raw Proficiency Estimate (AI's job)
+The Gemini model looks at your resume/GitHub and assigns each skill two values:
+- `rawProficiencyEstimate`: an honest 0–100 estimate of your actual demonstrated skill level.
+- `evidenceType`: how you demonstrated it (the quality of the proof).
 
-### 1. Target Benchmarking
-The AI first deconstructs the target role to identify necessary skills (scaling from 5 skills for Interns to up to 10 for Principal roles) and assigns them a **Tier** and a **Target Proficiency**:
-- **Tiers**: `core` (disqualifying if missing), `supporting` (separates good from average), or `contextual`.
-- **Target Proficiency**: Scales by seniority (e.g., Junior core skills demand 55-70; Principal roles demand 85-95).
+The AI is explicitly forbidden from inflating these; skills sections alone can never be higher than "mentioned".
 
-### 2. Individual Skill Scoring
-For every skill, the AI estimates a **Raw Proficiency** ($P_{raw}$, from 0-100) and an **Evidence Type**, which determines the confidence multiplier ($M_{c}$) applied:
+### Step 2: Skill Score — Applying the Confidence Multiplier
+```
+S_skill = min(100, round(P_raw × M_c) + B_cert)
+```
+The evidence type is converted to a confidence multiplier $M_c$:
 
-| Evidence Type | Multiplier ($M_{c}$) | Description |
+| Evidence Type | $M_c$ | What it means |
 | :--- | :--- | :--- |
-| `demonstrated_strong` | **1.00** | Explicit proof of outcome/impact in a professional project. |
-| `open_source_contribution`| **0.95** | Merged PRs or active maintenance in public repositories. |
-| `technical_assessment` | **0.90** | Verified completion of LeetCode/Hackerrank or coding tests. |
-| `demonstrated_weak` | **0.80** | Skill used in a project but without documented results. |
-| `claimed` | **0.55** | Appears in job summaries but lacks project backing. |
-| `mentioned` | **0.35** | A raw keyword in a skills list (marketing noise). |
-| `absent` | **0.00** | No evidence found. |
+| `demonstrated_strong` | 1.00 | Project with measurable outcome |
+| `open_source_contribution` | 0.95 | Merged PRs / active maintenance |
+| `technical_assessment_completion` | 0.90 | LeetCode / coding test passed |
+| `degree_doctorate` | 0.90 | PhD in the relevant domain |
+| `degree_masters` | 0.85 | Master's in the relevant domain |
+| `hackathon_participation` | 0.85 | Built during a competition |
+| `demonstrated_weak` | 0.80 | Project use, no measurable result |
+| `degree_bachelors` | 0.70 | Bachelor's in the relevant domain |
+| `claimed` | 0.55 | In job responsibilities, no project proof |
+| `mentioned` | 0.35 | Only in a skills list — marketing noise |
+| `absent` | 0.00 | No evidence at all |
 
-**The Skill Score Formula:**
-$$S_{skill} = \min\left(100, \text{round}(P_{raw} \times M_{c}) + B_{cert}\right)$$
-*Where $B_{cert}$ is the Certification Bonus (up to +10, capped based on seniority).*
+$B_{cert}$ is an optional certification bonus (0, 3, 5, 8, or 10 points) for relevant certifications, capped at 100.
 
-### 3. Match Ratio & Critical Gaps
-For each skill, we calculate a **Match Ratio** ($R_{match}$):
-$$R_{match} = \frac{S_{skill}}{\max(1, \text{Target Proficiency})}$$
+**Example:** You have Python listed in a project with described outcomes (`demonstrated_strong`, $M_c = 1.0$) and the AI estimates raw proficiency at 72:
+```
+S_skill = min(100, round(72 × 1.0) + 0) = 72
+```
+Same skill, but only listed in your skills section (`mentioned`, $M_c = 0.35$):
+```
+S_skill = min(100, round(72 × 0.35) + 0) = 25
+```
+This is the algorithm's key anti-inflation mechanism — proof quality dramatically affects the score.
 
-**Critical Gaps:** A critical gap is flagged if a `core` tier skill has an $R_{match} < 0.65$. Each gap incurs a steep penalty to reflect the risk of a "false positive" hire.
+### Step 3: Match Ratio per Skill
+```
+R_match = S_skill / max(1, TargetProficiency)
+```
+Each skill also has a target proficiency set by the role's seniority level:
+- **Junior core:** 55–70 | **Mid core:** 70–80 | **Senior core:** 80–90 | **Principal core:** 85–95
 
-### 4. Overall Match Percentage Calculation
-The final match percentage is a weighted average of the $R_{match}$ across all identified skills, normalized by the tiers present:
+So a score of 72 against a Senior role requiring 85:
+```
+R_match = 72 / 85 = 0.847  (~85% of target met)
+```
 
-1.  **Weighted Score ($W_{base}$):**
-    $$W_{base} = \sum (\text{Avg}(R_{match\_tier}) \times \text{Weight}_{tier})$$
-    *   `core`: **0.60** | `supporting`: **0.30** | `contextual`: **0.10**
+### Step 4: Identifying Critical Gaps
+A critical gap is flagged when:
+```
+skill.tier === "core"  AND  R_match < 0.65
+```
+Each critical gap increments a counter used in the penalty below. Critical gaps are also bubbled to the top of the displayed gap list with a !!CRITICAL!! marker.
 
-2.  **Normalization:**
-    If any tier is completely unrepresented in the role deconstruction, the $W_{base}$ is divided by the sum of weights of the *present* tiers. This ensures a role with no "Contextual" skills isn't unfairly mathematically capped at 90%.
+### Step 5: Weighted Base Score
+Skills are bucketed into three tiers with fixed weights:
 
-3.  **Penalty Multiplier ($M_{penalty}$):**
-    $$M_{penalty} = 1 - \min(0.25, \text{NumCriticalGaps} \times 0.08)$$
-    *This multiplier ensures that even a candidate with many mid-tier strengths cannot "average out" missing core competencies.*
+| Tier | Weight |
+| :--- | :--- |
+| `core` | 0.60 |
+| `supporting` | 0.30 |
+| `contextual` | 0.10 |
 
-4.  **Final Result:**
-    $$\text{Overall Match \%} = \max(0, \text{round}(W_{normalized} \times M_{penalty} \times 100))$$
+For each tier present, the average $R_{match}$ across all skills in that tier is computed, then multiplied by its weight and summed:
+```
+W_base = avg(R_match_core) × 0.60
+       + avg(R_match_supporting) × 0.30
+       + avg(R_match_contextual) × 0.10
+```
+**Normalization:** If a tier is completely absent (e.g. a role has no contextual skills), the weights of only the present tiers are summed and used as the denominator:
+```
+W_normalized = W_base / sum_of_present_tier_weights
+```
 
-### 5. Core Competency Classification (Strengths)
-A skill is officially recognized as a **Core Competency** or **Strength** in the dashboard when the candidate demonstrates functional capability relative to the specific role's demands:
+### Step 6: Critical Gap Penalty Multiplier
+```
+M_penalty = 1 - min(0.25, NumCriticalGaps × 0.08)
+```
+| # Critical Gaps | $M_{penalty}$ |
+| :--- | :--- |
+| 0 | 1.00 (no penalty) |
+| 1 | 0.92 (−8%) |
+| 2 | 0.84 (−16%) |
+| 3 | 0.76 (−24%) |
+| 4+ | 0.75 (capped at −25%) |
 
--   **Threshold**: $R_{match} \ge 0.55$.
--   **Core Competency**: The candidate meets at least 55% of the target proficiency benchmark.
--   **Excellence / Mastered**: If $R_{match} \ge 0.85$, the skill is highlighted in **Blue** to indicate mastery.
--   **Significance**: Competencies (Green) indicate a solid foundation, while Mastered skills (Blue) are areas where the candidate requires zero ramp-up and can mentor others. Unlike simple keyword matching, these statuses are only granted if the AI finds relevant evidence in the resume or GitHub data.
+### Step 7: Final Match Percentage
+```
+Overall Match % = max(0, round(W_normalized × M_penalty × 100))
+```
 
-This mathematical rigor ensures that an 85% match truly reflects a candidate capable of high performance, rather than someone with "keyword density" but no core depth.
+### Step 8: Strength/Gap Classification
+After all scores are computed, each skill is classified using its $R_{match}$:
+
+| $R_{match}$ | Label | Dashboard display |
+| :--- | :--- | :--- |
+| ≥ 0.85 | Mastered / Excellence | Blue highlight |
+| ≥ 0.55 | Core Competency | Green |
+| < 0.55 (supporting/contextual) | Gap | Shown in gaps list |
+| < 0.65 AND core tier | Critical Gap | Shown first with !!CRITICAL!! |
+
+---
+
+## Full Worked Example
+Suppose a Senior ML Engineer role has 3 skills:
+
+| Skill | Tier | Target | Your evidence | $P_{raw}$ | $M_c$ | $S_{skill}$ | $R_{match}$ |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| PyTorch | core | 85 | `demonstrated_strong` | 80 | 1.00 | 80 | 0.94 |
+| MLOps | core | 80 | `mentioned` | 65 | 0.35 | 23 | 0.29 → **CRITICAL GAP** |
+| SQL | supporting | 65 | `demonstrated_weak` | 70 | 0.80 | 56 | 0.86 |
+
+```
+W_base = avg(0.94, 0.29) × 0.60  +  avg(0.86) × 0.30
+       = 0.615 × 0.60 + 0.86 × 0.30
+       = 0.369 + 0.258 = 0.627
+
+W_normalized = 0.627 / (0.60 + 0.30) = 0.697   (no contextual tier)
+
+M_penalty = 1 - (1 × 0.08) = 0.92              (1 critical gap)
+
+Final = round(0.697 × 0.92 × 100) = round(64.1) = 64%
+```
+Without the MLOps gap penalty, the raw weighted score would have been ~70% — the penalty correctly signals that a missing core skill is a disqualifying issue.
+
