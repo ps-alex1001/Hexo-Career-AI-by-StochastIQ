@@ -342,7 +342,7 @@ export function DashboardScreen({
   };
 
   return (
-    <div className="flex-grow flex flex-col items-center p-6 bg-transparent relative z-10 w-full pt-10">
+    <div className="flex-grow flex flex-col items-center p-6 bg-transparent relative z-10 w-full pt-12">
       <div className="w-full max-w-6xl flex flex-col gap-8 pb-24">
         {/* Intelligence Radar Terminal */}
         <div className="glass-panel rounded-xl shadow-2xl relative">

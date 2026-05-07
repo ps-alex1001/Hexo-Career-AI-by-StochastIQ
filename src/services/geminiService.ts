@@ -666,13 +666,16 @@ Treat GitHub evidence as equal weight to resume evidence when both are present.
 For each skill, provide: rawProficiencyEstimate (0–100, your honest estimate of demonstrated proficiency), evidenceType (from the enum), certificationBonus (0, 3, 5, 8, or 10 from any directly relevant certifications — output separately, do not add to raw estimate), and a 1–2 sentence reasoning.
 
 PHASE 4 — PROJECTS
-1. Generate exactly 3 project stubs that help the candidate close their identified skill gaps.
+1. Generate exactly 3 highly detailed project stubs that help the candidate close their identified skill gaps.
 2. Projects must be:
-   - Beginner (difficultyLevel 1-2)
-   - Intermediate (difficultyLevel 3)
-   - Advanced (difficultyLevel 4-5)
-3. For these stubs, only provide title, description, expectedOutcome, difficultyLabel, difficultyLevel, and techStack.
-4. Do NOT generate the full blueprint/roadmap yet. Leave it out of this response.
+   - Beginner (difficultyLevel 1-2): Focused on fundamental implementation.
+   - Intermediate (difficultyLevel 3): Focused on architectural patterns and integration.
+   - Advanced (difficultyLevel 4-5): Focused on scale, performance, or complex system design.
+3. TITLE & TECH STACK QUALITY:
+   - Titles must be professional, descriptive, and technical (e.g., "Distributed Event-Driven Microservices Architecture" instead of "Simple Backend").
+   - Tech stacks must be comprehensive and modern (e.g., ["React", "TypeScript", "Redis", "Kafka", "Docker", "Go"]).
+4. For these stubs, only provide title, description, expectedOutcome, difficultyLabel, difficultyLevel, and techStack.
+5. Do NOT generate the full blueprint/roadmap yet. Leave it out of this response.
 
 PHASE 5 — SELF-AUDIT (mandatory — do not skip)
 Answer each check. If any fails, revise before outputting.
@@ -792,6 +795,7 @@ export async function generateSingleProjectBlueprint(
   targetRole: string,
   gaps: string[],
   projectIndex: number,
+  originalProject: { title: string; description: string; techStack: string[] },
 ): Promise<any> {
   const fallbackModels = [
     "gemini-3-flash-preview",
@@ -808,11 +812,21 @@ export async function generateSingleProjectBlueprint(
     try {
       const response = await ai.models.generateContent({
         model: currentModel,
-        contents: `TARGET ROLE: ${targetRole}\nGAPS IDENTIFIED:\n${gaps.join("\n")}\nTARGET DIFFICULTY: ${targetDifficulty}`,
+        contents: `TARGET ROLE: ${targetRole}
+GAPS IDENTIFIED:
+${gaps.join("\n")}
+TARGET DIFFICULTY: ${targetDifficulty}
+PROJECT CONTEXT:
+Title: ${originalProject.title}
+Base Description: ${originalProject.description}
+Tech Stack: ${originalProject.techStack.join(", ")}`,
         config: {
           systemInstruction: `
 You are a senior technical mentor creating a personalized learning and project execution blueprint for a candidate.
 Your goal is to provide a specific project that helps the candidate close their identified skill gaps and reach the target role.
+
+MANDATORY CONSTRAINT:
+You MUST use the provided PROJECT CONTEXT (Title, Base Description, and Tech Stack) exactly. Do NOT change the project's title or remove items from the tech stack. You may expand upon the description in the "expectedOutcome" field or within the blueprint steps, but the core project identity must remain unchanged to ensure UI consistency.
 
 Generate exactly 1 project targeting the ${targetDifficulty} difficulty tier.
 

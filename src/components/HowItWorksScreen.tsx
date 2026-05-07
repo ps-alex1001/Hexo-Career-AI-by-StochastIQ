@@ -40,7 +40,7 @@ export function HowItWorksScreen({ onStartMapping }: HowItWorksScreenProps) {
   ];
 
   return (
-    <div className="flex-grow w-full max-w-5xl mx-auto px-6 py-24 flex flex-col items-center">
+    <div className="flex-grow w-full max-w-5xl mx-auto px-6 pt-24 pb-24 flex flex-col items-center">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}

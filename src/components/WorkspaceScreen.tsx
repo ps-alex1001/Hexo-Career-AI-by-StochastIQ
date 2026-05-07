@@ -453,7 +453,7 @@ export function WorkspaceScreen({
   ];
 
   return (
-    <div className="flex-grow flex items-center justify-center p-6 bg-transparent relative z-10 w-full pt-10">
+    <div className="flex-grow flex items-center justify-center p-6 bg-transparent relative z-10 w-full pt-12">
       <div className="w-full max-w-[900px] flex flex-col gap-6">
         <div className="mb-4">
           <h2 className="text-3xl font-bold tracking-tight dark:text-white text-slate-900 mb-2 font-sans">
@@ -669,7 +669,7 @@ export function WorkspaceScreen({
             <div className="flex items-center gap-3">
               <Target size={18} className="dark:text-white/40 text-slate-400" />
               <span className="text-xs font-mono dark:text-white/40 text-slate-500 uppercase tracking-wider">
-                Target.Vector
+                Target Role
               </span>
             </div>
 

@@ -20,6 +20,8 @@ interface BlueprintScreenProps {
   onBack: () => void;
   scrollProgress?: number;
   onProjectChange?: (index: number) => void;
+  onGenerate?: (index: number) => void;
+  generatingIndices?: number[];
 }
 
 export function BlueprintScreen({
@@ -28,6 +30,8 @@ export function BlueprintScreen({
   onBack,
   scrollProgress = 0,
   onProjectChange,
+  onGenerate,
+  generatingIndices = [],
 }: BlueprintScreenProps) {
   const [activeProjectIdx, setActiveProjectIdx] = useState(initialProjectIndex);
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
@@ -37,6 +41,8 @@ export function BlueprintScreen({
   const observerRef = useRef<IntersectionObserver | null>(null);
 
   const activeProject = data.projects[activeProjectIdx];
+  const isGenerating = generatingIndices.includes(activeProjectIdx);
+  const hasBlueprint = activeProject?.blueprint && activeProject.blueprint.length > 0;
 
   // Sync internal state with prop if it changes from outside
   useEffect(() => {
@@ -46,10 +52,12 @@ export function BlueprintScreen({
   useEffect(() => {
     // Force scroll to top on mount and project switch
     window.scrollTo({ top: 0, behavior: "smooth" });
-    if (activeProject?.blueprint?.length > 0) {
+    if (hasBlueprint) {
       setActiveSectionId(`step-${activeProject.blueprint[0].id}`);
+    } else {
+      setActiveSectionId(null);
     }
-  }, [activeProjectIdx, activeProject]);
+  }, [activeProjectIdx, activeProject, hasBlueprint]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -97,7 +105,7 @@ export function BlueprintScreen({
   if (!data) return null;
 
   return (
-    <div className="flex-grow flex flex-col bg-transparent w-full pt-20 print:pt-0">
+    <div className="flex-grow flex flex-col bg-transparent w-full pt-12 print:pt-0">
       <div className="flex-grow flex items-start max-w-7xl w-full mx-auto relative px-6 lg:px-0">
         {/* Sidebar Navigation - FIXED */}
         <aside className="hidden lg:block w-72 shrink-0 border-r border-purple-100 dark:border-purple-500/20 py-12 px-8 sticky top-[136px] self-start max-h-[calc(100vh-160px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] print:hidden">
@@ -114,7 +122,7 @@ export function BlueprintScreen({
           </div>
 
           <nav className="flex flex-col gap-1">
-            {activeProject.blueprint.map((step: any, idx: number) => {
+            {hasBlueprint && activeProject.blueprint.map((step: any, idx: number) => {
               const isActive = activeSectionId === `step-${step.id}`;
               return (
                 <a
@@ -229,25 +237,76 @@ export function BlueprintScreen({
               {activeProject.title}
             </h1>
 
-            <div className="flex flex-wrap gap-3 mb-8">
-              {activeProject.techStack?.map((tech: string, i: number) => (
-                <motion.span
-                  key={i}
-                  whileHover={{ scale: 1.05 }}
-                  className="px-3 py-1.5 dark:bg-purple-50 bg-purple-900 text-white dark:text-purple-900 border border-purple-200 dark:border-purple-400/30 rounded-full text-xs font-medium tracking-wide shadow-sm"
-                >
-                  {tech}
-                </motion.span>
-              ))}
-            </div>
+            {!hasBlueprint ? (
+              <div className="mt-12 p-8 rounded-3xl border border-dashed border-purple-200 dark:border-purple-500/30 dark:bg-purple-900/10 bg-purple-50/50 flex flex-col items-center text-center gap-6">
+                <div className="w-16 h-16 rounded-2xl dark:bg-purple-500/20 bg-purple-100 flex items-center justify-center">
+                  <Layers className="text-purple-600 dark:text-purple-400" size={32} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold dark:text-purple-50 text-slate-900 mb-2">
+                    {isGenerating ? "Generating Detailed Blueprint..." : "Blueprint Not Generated Yet"}
+                  </h3>
+                  <p className="dark:text-purple-300/70 text-slate-600 max-w-md mx-auto leading-relaxed">
+                    {isGenerating 
+                      ? "Our AI is crafting a custom project plan designed specifically to bridge your identified skill gaps. This usually takes 15-30 seconds."
+                      : "You've identified this project as a match. Now, generate a step-by-step technical blueprint to start building your evidence."}
+                  </p>
+                </div>
+                {!isGenerating && (
+                  <button
+                    onClick={() => onGenerate?.(activeProjectIdx)}
+                    className="flex items-center gap-2 px-8 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-2xl font-bold transition-all shadow-lg hover:shadow-purple-500/25 active:scale-95"
+                  >
+                    <Layers size={20} />
+                    GENERATE BLUEPRINT
+                  </button>
+                )}
+                {isGenerating && (
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="flex gap-1.5 item-center">
+                      {[0, 1, 2].map((i) => (
+                        <motion.div
+                          key={i}
+                          animate={{
+                            scale: [1, 1.2, 1],
+                            opacity: [0.3, 1, 0.3],
+                          }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            delay: i * 0.2,
+                          }}
+                          className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400"
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs font-mono dark:text-purple-400 text-purple-600 uppercase tracking-widest animate-pulse">Processing Evidence...</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap gap-3 mb-8">
+                  {activeProject.techStack?.map((tech: string, i: number) => (
+                    <motion.span
+                      key={i}
+                      whileHover={{ scale: 1.05 }}
+                      className="px-3 py-1.5 dark:bg-purple-50 bg-purple-900 text-white dark:text-purple-900 border border-purple-200 dark:border-purple-400/30 rounded-full text-xs font-medium tracking-wide shadow-sm"
+                    >
+                      {tech}
+                    </motion.span>
+                  ))}
+                </div>
 
-            <div className="text-xl dark:text-purple-50 text-slate-800 leading-relaxed mb-4 markdown-body">
-              <ReactMarkdown>{activeProject.description}</ReactMarkdown>
-            </div>
+                <div className="text-xl dark:text-purple-50 text-slate-800 leading-relaxed mb-4 markdown-body">
+                  <ReactMarkdown>{activeProject.description}</ReactMarkdown>
+                </div>
+              </>
+            )}
           </div>
 
           <div className="space-y-24 pb-[70vh]">
-            {activeProject.blueprint.map((step: any, idx: number) => (
+            {hasBlueprint && activeProject.blueprint.map((step: any, idx: number) => (
               <section
                 key={step.id}
                 id={`step-${step.id}`}
@@ -258,7 +317,7 @@ export function BlueprintScreen({
                     <span className="text-purple-600 dark:text-purple-400 font-mono text-xl font-bold">
                       {String(idx + 1).padStart(2, "0")}
                     </span>
-                    <h2 className="text-2xl font-bold dark:text-purple-100/50 text-slate-800 m-0">
+                    <h2 className="text-2xl font-bold dark:text-white text-slate-800 m-0">
                       {step.title}
                     </h2>
                   </div>
@@ -313,7 +372,7 @@ export function BlueprintScreen({
                     <span className="text-purple-600 dark:text-purple-400 font-mono text-xl font-bold">
                       ★
                     </span>
-                    <h2 className="text-2xl font-bold dark:text-purple-100/50 text-slate-800 m-0">
+                    <h2 className="text-2xl font-bold dark:text-white text-slate-800 m-0">
                       Expected Outcome
                     </h2>
                   </div>
@@ -344,26 +403,28 @@ export function BlueprintScreen({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 h-full w-full max-w-md dark:bg-purple-950 bg-purple-50 border-l border-purple-200 dark:border-purple-500/20 z-[70] shadow-2xl flex flex-col"
+              className="fixed right-0 top-0 h-full w-full max-w-md dark:bg-[#0c0119]/90 bg-purple-50/95 backdrop-blur-2xl border-l border-purple-200 dark:border-white/10 z-[70] shadow-2xl flex flex-col"
             >
-              <div className="flex items-center justify-between p-6 border-b border-purple-200 dark:border-purple-500/20">
+              <div className="flex items-center justify-between p-6 border-b border-purple-200 dark:border-white/10">
                 <div className="flex items-center gap-3">
-                  <BookOpen
-                    size={20}
-                    className="text-purple-600 dark:text-purple-400"
-                  />
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                    <BookOpen
+                      size={20}
+                      className="text-white"
+                    />
+                  </div>
                   <div>
-                    <h3 className="text-lg font-bold dark:text-purple-50 text-slate-900">
+                    <h3 className="text-lg font-bold dark:text-white text-slate-900">
                       Step Resources
                     </h3>
-                    <p className="text-xs dark:text-purple-300/50 text-purple-900/60 font-mono uppercase tracking-wider">
+                    <p className="text-[10px] dark:text-purple-300/50 text-purple-900/60 font-mono uppercase tracking-[0.2em]">
                       {selectedResourcesStep.title}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={() => setSelectedResourcesStep(null)}
-                  className="p-2 hover:bg-purple-100 dark:hover:bg-purple-900/40 rounded-lg dark:text-purple-300 text-purple-900 transition-colors"
+                  className="p-2 hover:bg-purple-100 dark:hover:bg-white/10 rounded-xl dark:text-white/70 text-purple-900 transition-colors"
                 >
                   <X size={20} />
                 </button>
@@ -373,39 +434,39 @@ export function BlueprintScreen({
                 {/* Free Resources Section */}
                 <div>
                   <div className="flex items-center gap-2 mb-6">
-                    <span className="bg-purple-600 dark:bg-purple-500 text-white text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-1 rounded">
+                    <span className="bg-purple-600 dark:bg-purple-600 text-white text-[10px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-md shadow-sm">
                       Free Resources
                     </span>
-                    <div className="flex-1 h-px bg-purple-200 dark:bg-purple-500/20 opacity-20"></div>
+                    <div className="flex-1 h-px bg-purple-200 dark:bg-white/10 opacity-50"></div>
                   </div>
                   <div className="space-y-6">
                     {selectedResourcesStep.resources?.free?.map(
                       (res: any, idx: number) => (
                         <div
                           key={idx}
-                          className="group p-4 rounded-xl dark:bg-purple-900/30 bg-white/70 backdrop-blur-md border border-purple-100 dark:border-purple-500/20 hover:border-purple-300 dark:hover:border-purple-500/40 transition-all shadow-sm"
+                          className="group p-5 rounded-2xl dark:bg-white/5 bg-white border border-purple-100 dark:border-white/10 hover:border-purple-300 dark:hover:border-purple-500/40 transition-all shadow-sm hover:shadow-md"
                         >
-                          <div className="flex items-start justify-between mb-2">
-                            <span className="text-xs dark:text-purple-300 text-purple-900/50 font-mono uppercase tracking-widest">
+                          <div className="flex items-start justify-between mb-3">
+                            <span className="text-[10px] dark:text-purple-400 text-purple-900/50 font-mono uppercase tracking-[0.2em] font-bold">
                               {res.type}
                             </span>
                             <a
                               href={res.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="dark:text-purple-300/50 text-purple-900/50 hover:text-purple-600 dark:hover:text-purple-300 transition-colors"
+                              className="dark:text-white/30 text-purple-900/50 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
                             >
                               <ExternalLink size={14} />
                             </a>
                           </div>
-                          <h4 className="dark:text-purple-50 text-slate-900 font-bold mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors uppercase text-sm tracking-tight">
+                          <h4 className="dark:text-white text-slate-900 font-bold mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors text-sm tracking-tight leading-snug">
                             {res.name}
                           </h4>
-                          <p className="dark:text-blue-100/70 text-slate-600 text-sm mb-4 leading-relaxed">
+                          <p className="dark:text-white/60 text-slate-600 text-xs mb-4 leading-relaxed line-clamp-3">
                             {res.whyItHelps}
                           </p>
-                          <div className="flex items-center gap-2 text-[10px] dark:text-purple-300 text-purple-900/60 font-mono">
-                            <Clock size={12} />
+                          <div className="flex items-center gap-2 text-[10px] dark:text-purple-300/70 text-purple-900/60 font-mono font-medium">
+                            <Clock size={12} className="text-purple-500" />
                             {res.estimatedTime}
                           </div>
                         </div>
@@ -423,50 +484,50 @@ export function BlueprintScreen({
                 {/* Premium Resources Section */}
                 <div>
                   <div className="flex items-center gap-2 mb-6">
-                    <span className="bg-purple-800 dark:bg-purple-400 text-white text-[10px] font-bold uppercase tracking-[0.2em] px-2 py-1 rounded">
+                    <span className="bg-pink-600 dark:bg-pink-600 text-white text-[10px] font-bold uppercase tracking-[0.2em] px-2.5 py-1 rounded-md shadow-sm">
                       Premium Resources
                     </span>
-                    <div className="flex-1 h-px bg-purple-200 dark:bg-purple-500/20 opacity-20"></div>
+                    <div className="flex-1 h-px bg-purple-200 dark:bg-white/10 opacity-50"></div>
                   </div>
                   <div className="space-y-6">
                     {selectedResourcesStep.resources?.premium?.map(
                       (res: any, idx: number) => (
                         <div
                           key={idx}
-                          className="group p-4 rounded-xl dark:bg-purple-900/30 bg-white/70 backdrop-blur-md border border-purple-100 dark:border-purple-500/20 hover:border-purple-300 dark:hover:border-purple-500/40 transition-all shadow-sm"
+                          className="group p-5 rounded-2xl dark:bg-white/5 bg-white border border-purple-100 dark:border-white/10 hover:border-purple-300 dark:hover:border-pink-500/40 transition-all shadow-sm hover:shadow-md"
                         >
-                          <div className="flex items-start justify-between mb-2">
-                            <span className="text-xs dark:text-purple-300 text-purple-900/50 font-mono uppercase tracking-widest">
+                          <div className="flex items-start justify-between mb-3">
+                            <span className="text-[10px] dark:text-pink-400 text-purple-900/50 font-mono uppercase tracking-[0.2em] font-bold">
                               {res.type}
                             </span>
                             <div className="flex items-center gap-3">
-                              <span className="text-[10px] text-purple-900 dark:text-purple-300 font-bold uppercase">
+                              <span className="text-[10px] text-pink-600 dark:text-pink-400 font-bold uppercase tracking-tight">
                                 {res.cost}
                               </span>
                               <a
                                 href={res.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="dark:text-purple-300/50 text-purple-900/50 hover:text-purple-600 dark:hover:text-purple-300 transition-colors"
+                                className="dark:text-white/30 text-purple-900/50 hover:text-purple-600 dark:hover:text-pink-400 transition-colors"
                               >
                                 <ExternalLink size={14} />
                               </a>
                             </div>
                           </div>
-                          <h4 className="dark:text-purple-50 text-slate-900 font-bold mb-2 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors uppercase text-sm tracking-tight">
+                          <h4 className="dark:text-white text-slate-900 font-bold mb-2 group-hover:text-pink-600 dark:group-hover:text-pink-400 transition-colors text-sm tracking-tight leading-snug">
                             {res.name}
                           </h4>
-                          <p className="dark:text-blue-100/70 text-slate-600 text-sm mb-4 leading-relaxed">
+                          <p className="dark:text-white/60 text-slate-600 text-xs mb-4 leading-relaxed line-clamp-3">
                             {res.whyItHelps}
                           </p>
-                          <div className="bg-purple-100 dark:bg-purple-900/40 border border-purple-200 dark:border-purple-500/20 rounded-lg p-3">
-                            <div className="flex items-center gap-2 text-purple-900 dark:text-purple-100 mb-1">
+                          <div className="bg-purple-100/50 dark:bg-white/5 border border-purple-100 dark:border-white/10 rounded-xl p-3">
+                            <div className="flex items-center gap-2 text-purple-900 dark:text-pink-400 mb-1.5">
                               <ShieldCheck size={14} />
-                              <span className="text-[10px] font-bold uppercase tracking-wider">
-                                Worth it if...
+                              <span className="text-[10px] font-black uppercase tracking-[0.1em]">
+                                Strategic Value
                               </span>
                             </div>
-                            <p className="text-xs dark:text-purple-200 text-purple-900/80 italic leading-snug">
+                            <p className="text-[11px] dark:text-white/60 text-purple-900/80 italic leading-normal">
                               {res.worthItIf}
                             </p>
                           </div>
@@ -483,10 +544,10 @@ export function BlueprintScreen({
                 </div>
               </div>
 
-              <div className="p-6 border-t border-purple-200 dark:border-purple-500/20 dark:bg-purple-900/80 bg-white/80 backdrop-blur-md">
+              <div className="p-6 border-t border-white/10 dark:bg-black/50 bg-white/80 backdrop-blur-md">
                 <button
                   onClick={() => setSelectedResourcesStep(null)}
-                  className="w-full py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-all shadow-md"
+                  className="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white rounded-xl text-xs font-bold uppercase tracking-[0.2em] transition-all shadow-lg shadow-purple-500/20 active:scale-[0.98]"
                 >
                   Back to Blueprint
                 </button>

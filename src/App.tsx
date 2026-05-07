@@ -159,10 +159,16 @@ export default function App() {
     try {
       const { generateSingleProjectBlueprint } =
         await import("./services/geminiService");
+      const projectToGenerate = (analysisData.projects || [])[index];
       const newProject = await generateSingleProjectBlueprint(
         analysisData.targetRole,
         analysisData.skills.gaps,
         index,
+        {
+          title: projectToGenerate.title,
+          description: projectToGenerate.description,
+          techStack: projectToGenerate.techStack,
+        },
       );
       setAnalysisData((prev) => {
         if (!prev) return prev;
@@ -184,15 +190,9 @@ export default function App() {
   const handleViewBlueprint = async (index: number) => {
     if (!analysisData) return;
     
-    const project = analysisData.projects?.[index];
-    
-    // If the project already has a blueprint, navigate
-    if (project?.blueprint && project.blueprint.length > 0) {
-      setSelectedProjectIndex(index);
-      setCurrentScreen("blueprint");
-      setScrollProgress(0);
-      return;
-    }
+    setSelectedProjectIndex(index);
+    setCurrentScreen("blueprint");
+    setScrollProgress(0);
   };
 
   useEffect(() => {
@@ -221,16 +221,17 @@ export default function App() {
     <div
       className={`font-sans text-base antialiased min-h-screen flex flex-col relative transition-colors duration-300 ${isDark ? "dark app-background text-white" : "app-background text-slate-800"}`}
     >
-      {/* TopNavBar */}
-      <nav
-        className={cn(
-          "fixed top-3 left-1/2 -translate-x-1/2 w-[94%] max-w-6xl glass-panel z-50 transition-all duration-300 shadow-lg dark:shadow-[0_4px_30px_rgba(140,60,255,0.1)] overflow-hidden print:hidden",
-          currentScreen === "blueprint"
-            ? "h-28 rounded-2xl"
-            : "h-14 rounded-full",
-        )}
-      >
-        <div className="sticky top-0 grid grid-cols-[1fr_auto_1fr] items-center px-8 h-14 w-full z-50 border-b border-black/5 dark:border-white/5">
+      {/* TopNavBar Wrapper */}
+      <div className="sticky top-0 z-[100] w-full pt-4 pointer-events-none print:hidden">
+        <nav
+          className={cn(
+            "pointer-events-auto mx-auto w-[94%] max-w-6xl glass-panel transition-all duration-300 shadow-xl dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden",
+            currentScreen === "blueprint"
+              ? "h-28 rounded-2xl"
+              : "h-14 rounded-full",
+          )}
+        >
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center px-8 h-14 w-full z-10 border-b border-black/5 dark:border-white/5">
           <div className="flex items-center">
             <button
               onClick={() => setCurrentScreen("landing")}
@@ -293,7 +294,7 @@ export default function App() {
 
         {/* Blueprint Sub-Nav (Combined) */}
         {currentScreen === "blueprint" && analysisData && (
-          <div className="sticky top-14 h-14 flex items-center justify-between w-full px-4 md:px-8 dark:bg-purple-900/20 bg-purple-50 backdrop-blur-sm animate-in slide-in-from-top-2 duration-300 relative overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] z-40">
+          <div className="h-14 flex items-center justify-between w-full px-4 md:px-8 dark:bg-purple-900/20 bg-purple-50 backdrop-blur-sm animate-in slide-in-from-top-2 duration-300 relative overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] z-40">
             <div className="flex items-center gap-3 md:gap-6 shrink-0">
               <button
                 onClick={() => setCurrentScreen("dashboard")}
@@ -358,6 +359,7 @@ export default function App() {
           </div>
         )}
       </nav>
+    </div>
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
@@ -424,7 +426,7 @@ export default function App() {
       <main
         className={cn(
           "flex-grow relative flex flex-col items-center w-full",
-          currentScreen !== "landing" && "pt-16"
+          currentScreen !== "landing" && "pt-20"
         )}
       >
         {currentScreen === "landing" && (
@@ -468,6 +470,8 @@ export default function App() {
             onBack={() => setCurrentScreen("dashboard")}
             scrollProgress={scrollProgress}
             onProjectChange={setSelectedProjectIndex}
+            onGenerate={handleGenerateBlueprint}
+            generatingIndices={generatingIndices}
           />
         )}
         {currentScreen === "how-it-works" && (
