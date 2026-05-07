@@ -1,6 +1,6 @@
 # 🐝 Hexo — Find Your Missing Cell
 
-> *The gap in your profile isn't a weakness — it's a missing cell. Hexo shows you where it is and how to fill it.*
+> *The gap in your profile isn't a weakness — it's a missing cell. Hexo shows those gaps and how to fill it.*
 
 **CodeKada Hackathon Entry** · Theme: *Build from Anywhere, Build Anything* · Track: *Intelligence Systems & Data*
 
@@ -12,20 +12,20 @@ The honeycomb is the most efficient structure in nature. Bees don't build random
 
 **Hexo applies that logic to your career.**
 
-You don't just have skills — you have a structure. Each project you build is a cell. Each cell connects. By the end you don't have a resume, you have a hive: something you built, something visible, something that proves you did the work.
+It doesn't mean you lack skills — you just lack structure to hone those skills. Each project you build is a cell. Each cell connects. By the end you don't have a resume, you have a hive: something you built, something visible, something that proves you did the work.
 
-Hexo is a talent intelligence engine powered by **Gemini 2.0 Flash** that maps your real, evidenced capabilities against a target role — and shows you exactly which cells are missing and how to fill them.
+Hexo is a talent intelligence engine powered by **Gemini 3.0 Flash** that maps your real, evidenced capabilities against a target role — and shows you exactly which cells are missing and how to fill them.
 
 ---
 
 ## ✨ Features
 
 - **Evidence-First Scoring** — Claims without proof are penalized. A skill listed in your skills section is worth a fraction of one demonstrated in a real project with measurable outcomes.
-- **Multi-Source Analysis** — Ingests Resume PDFs (text layer + OCR fallback) and live GitHub profiles to verify technical capability, not just keywords.
+- **Multi-Source Analysis** — Imports Resume PDFs (text layer + OCR fallback) and live GitHub profiles to verify technical capability, not just keywords.
 - **Tiered Skill Taxonomy** — Requirements are classified as `Core` (disqualifying if missing), `Supporting`, or `Contextual`, each weighted accordingly.
-- **Deterministic Algorithm** — Gemini only extracts data. The final Match Percentage is computed by a rigid mathematical formula — no AI "niceness," no bias.
+- **Deterministic Algorithm** — Gemini only extracts data. The final Match Percentage is computed by a rigid mathematical formula based on carefully though algebra in order to maintain no bias.
 - **Transparent Radar Dashboard** — Every score includes the AI's underlying reasoning and benchmarked target expectations.
-- **Actionable Blueprints** — Three tiered portfolio project specs (Beginner → Advanced) generated specifically to close your identified gaps.
+- **Actionable Blueprints** — Three tiered portfolio project specs (Beginner → Intermediate → Advanced) generated specifically to close your identified gaps.
 
 ---
 
@@ -40,11 +40,11 @@ Hexo is a talent intelligence engine powered by **Gemini 2.0 Flash** that maps y
 
 ## 🚀 How to Use
 
-1. **Enter Target Context** — Specify the role you are targeting (e.g. `"Senior ML Engineer"`) or paste a full job description.
-2. **Provide Evidence** — Upload your resume (PDF) or paste raw text. Optionally add a GitHub username.
+1. **Enter Target Context** — Specify the role you are targeting (e.g. `"Senior ML Engineer"`) or paste a job listing URL.
+2. **Provide Evidence** — Upload your resume (PDF) or paste raw text. Optionally add a GitHub profile link.
 3. **Analyze** — Click **Analyze**. Hexo processes your documents and calls Gemini to assess your qualifications.
 4. **Review Results** — View your Match %, Strengths, and Critical Gaps on the Dashboard. Hover radar nodes to see your score vs. the target.
-5. **Follow the Blueprint** — Click **View Blueprint** for tailored, step-by-step project plans to close your gaps.
+5. **Follow the Blueprint** — Click **View Blueprint** for personalized, step-by-step project plans to close your gaps.
 
 ---
 
@@ -68,10 +68,10 @@ npm run dev            # http://localhost:3000
 ## 📐 The Scoring Algorithm
 
 > [!IMPORTANT]
-> **Deterministic Disclaimer**: This scoring logic is explicitly decoupled from the generative AI's opinion. The AI acts only as a "data extractor." The final Match Percentage is computed via a hard-coded mathematical formula applied to the AI's output.
+> **Deterministic Disclaimer**: This scoring logic is explicitly decoupled from the generative AI's opinion. The AI acts only as a "data extractor." The final Match Percentage is computed via a hard-coded algebraic formula. This prevents the system from "hallucinating" high scores or being swayed by marketing-heavy resumes that lack substantive proof.
 
 ### Step 1: Raw Proficiency Estimate (The Extraction)
-The Gemini model looks at your resume/GitHub and assigns each skill two values:
+The Gemini model looks at your resume/GitHub profile and projects then it assigns each skill two values:
 - `rawProficiencyEstimate`: an honest 0–100 estimate of your actual demonstrated skill level.
 - `evidenceType`: how you demonstrated it (the quality of the proof).
 
