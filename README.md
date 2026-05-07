@@ -4,6 +4,10 @@
 
 Hexo Career AI is a high-performance talent intelligence engine built to eliminate the ambiguity of manual resume screening. It leverages the reasoning power of the **Gemini 2.0 Flash** model to perform surgical skill gap analysis, resulting in a deterministic match score and an actionable project-based roadmap.
 
+## 🌐 Live Demo
+
+> **Live Demo:** _Deploy to Vercel/Netlify/Cloud Run and add your URL here_
+
 ---
 
 ## 👨‍⚖️ Judge's Quick Guide
@@ -58,6 +62,9 @@ Most AI screeners simply look for keywords or ask an LLM, "How good is this cand
    ```bash
    npm install
    ```
+
+> [!IMPORTANT]
+> **A valid Gemini API key is required.** Evaluators and users must set their own `GEMINI_API_KEY` in the `.env` file before running. Get one for free at [Google AI Studio](https://aistudio.google.com/app/apikey).
 
 3. **Set up Environment Variables:**
    Create a `.env` file in the root directory based on `.env.example`:
@@ -188,4 +195,3 @@ $$M_{\text{penalty}} = 1 - (1 \times 0.08) = 0.92 \quad \text{(1 critical gap)}$
 
 $$\text{Final} = \text{round}(0.697 \times 0.92 \times 100) = \text{round}(64.1) = 64\%$$
 Without the MLOps gap penalty, the raw weighted score would have been ~70% — the penalty correctly signals that a missing core skill is a disqualifying issue.
-
