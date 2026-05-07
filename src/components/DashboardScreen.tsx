@@ -342,13 +342,13 @@ export function DashboardScreen({
   };
 
   return (
-    <div className="flex-grow flex flex-col items-center p-6 bg-transparent relative z-10 w-full pt-12">
+    <div className="flex-grow flex flex-col items-center p-6 bg-transparent relative z-10 w-full pt-4">
       <div className="w-full max-w-6xl flex flex-col gap-8 pb-24">
         {/* Intelligence Radar Terminal */}
-        <div className="glass-panel rounded-xl shadow-2xl relative">
+        <div className="border border-purple-100 dark:border-purple-500/10 rounded-xl shadow-xl relative overflow-hidden backdrop-blur-sm">
           <div className="grid grid-cols-1 lg:grid-cols-12 relative z-10">
             {/* Left Column: Metrics */}
-            <div className="lg:col-span-4 border-r border-purple-100 dark:border-purple-500/20 p-8 flex flex-col gap-8 dark:bg-purple-900/10 bg-white/30 rounded-t-xl lg:rounded-t-none lg:rounded-l-xl relative z-20">
+            <div className="lg:col-span-4 border-r border-purple-100 dark:border-purple-500/20 p-8 flex flex-col gap-8 rounded-t-xl lg:rounded-t-none lg:rounded-l-xl relative z-20">
               {/* Target Role Card */}
               <div className="relative pl-6 border-l-4 border-purple-600 dark:border-purple-400 py-2">
                 <span className="text-[10px] font-mono dark:text-purple-300/50 text-purple-900/50 uppercase tracking-widest block mb-1">
@@ -441,7 +441,7 @@ export function DashboardScreen({
             </div>
 
             {/* Right Column: Visualization */}
-            <div className="lg:col-span-8 p-10 flex flex-col items-center justify-center relative z-10 dark:bg-purple-900/5 bg-white/20 rounded-b-xl lg:rounded-b-none lg:rounded-r-xl">
+            <div className="lg:col-span-8 p-10 flex flex-col items-center justify-center relative z-10 rounded-b-xl lg:rounded-b-none lg:rounded-r-xl">
               <div className="w-full h-[450px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <RadarChart
@@ -560,7 +560,7 @@ export function DashboardScreen({
         {/* Strengths and Gaps Secondary Layout */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Verified Strengths Card */}
-          <div className="glass-card rounded-xl overflow-hidden group border border-purple-100 dark:border-purple-500/20 transition-all hover:border-purple-300 dark:hover:border-purple-500/40 bg-white/30 dark:bg-purple-900/10">
+          <div className="border border-purple-100 dark:border-purple-500/10 rounded-xl overflow-hidden group hover:border-purple-300 dark:hover:border-purple-500/30 transition-all backdrop-blur-sm shadow-lg">
             <div className="bg-purple-600 dark:bg-purple-500/20 border-b border-purple-400 dark:border-purple-500/20 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <ShieldCheck size={18} className="text-white" />
@@ -570,7 +570,7 @@ export function DashboardScreen({
               </div>
               <div className="w-2 h-2 rounded-full bg-white/40 animate-pulse"></div>
             </div>
-            <div className="p-8 space-y-5 bg-white/30 dark:bg-purple-900/10 backdrop-blur-md">
+            <div className="p-8 space-y-5 backdrop-blur-md">
               {data.skills.strengths.map(
                 (str: { name: string; matchRatio: number }, i: number) => {
                   return (
@@ -600,7 +600,7 @@ export function DashboardScreen({
           </div>
 
           {/* Critical Gaps Card */}
-          <div className="glass-card rounded-xl overflow-hidden group border border-purple-100 dark:border-purple-500/20 transition-all hover:border-purple-300 dark:hover:border-purple-500/40 bg-white/30 dark:bg-purple-900/10">
+          <div className="border border-purple-100 dark:border-purple-500/10 rounded-xl overflow-hidden group hover:border-purple-300 dark:hover:border-purple-500/30 transition-all backdrop-blur-sm shadow-lg">
             <div className="bg-purple-800 dark:bg-purple-900/40 border-b border-purple-600 dark:border-purple-500/30 px-6 py-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Zap size={18} className="text-white" />
@@ -610,7 +610,7 @@ export function DashboardScreen({
               </div>
               <div className="w-2 h-2 rounded-full bg-white/40 animate-pulse"></div>
             </div>
-            <div className="p-8 space-y-5 bg-white/30 dark:bg-purple-900/10 backdrop-blur-md">
+            <div className="p-8 space-y-5 backdrop-blur-md">
               {data.skills.gaps.map((gap: string, i: number) => {
                 const isCritical = gap.includes("!!CRITICAL!!");
                 const cleanGap = gap.replace(" !!CRITICAL!!", "");
@@ -707,8 +707,8 @@ export function DashboardScreen({
                   }}
                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
                   className={cn(
-                    "glass-card border border-purple-100 dark:border-purple-500/20 rounded-xl p-8 flex flex-col transition-all duration-300 group/card relative overflow-hidden",
-                    "border-t-2 border-t-purple-600 dark:border-t-purple-400 dark:bg-purple-900/10 bg-white/60 dark:text-purple-50 text-slate-900 hover:shadow-xl",
+                    "border border-purple-100 dark:border-purple-500/10 rounded-xl p-8 flex flex-col transition-all duration-300 group/card relative overflow-hidden backdrop-blur-sm",
+                    "border-t-2 border-t-purple-600 dark:border-t-purple-400 dark:text-purple-50 text-slate-900 hover:shadow-xl",
                   )}
                 >
                   {/* Background Accent */}

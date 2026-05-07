@@ -105,7 +105,7 @@ export function BlueprintScreen({
   if (!data) return null;
 
   return (
-    <div className="flex-grow flex flex-col bg-transparent w-full pt-12 print:pt-0">
+    <div className="flex-grow flex flex-col bg-transparent w-full pt-4 print:pt-0">
       <div className="flex-grow flex items-start max-w-7xl w-full mx-auto relative px-6 lg:px-0">
         {/* Sidebar Navigation - FIXED */}
         <aside className="hidden lg:block w-72 shrink-0 border-r border-purple-100 dark:border-purple-500/20 py-12 px-8 sticky top-[136px] self-start max-h-[calc(100vh-160px)] overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] print:hidden">
@@ -396,14 +396,14 @@ export function BlueprintScreen({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedResourcesStep(null)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60]"
+              className="fixed inset-0 bg-black/40 backdrop-blur-md z-50"
             />
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 h-full w-full max-w-md dark:bg-[#0c0119]/90 bg-purple-50/95 backdrop-blur-2xl border-l border-purple-200 dark:border-white/10 z-[70] shadow-2xl flex flex-col"
+              className="fixed right-0 top-0 h-full w-full max-w-md dark:bg-[#0c0119]/90 bg-purple-50/95 backdrop-blur-2xl border-l border-purple-200 dark:border-white/10 z-[60] shadow-2xl flex flex-col"
             >
               <div className="flex items-center justify-between p-6 border-b border-purple-200 dark:border-white/10">
                 <div className="flex items-center gap-3">

@@ -222,7 +222,7 @@ export default function App() {
       className={`font-sans text-base antialiased min-h-screen flex flex-col relative transition-colors duration-300 ${isDark ? "dark app-background text-white" : "app-background text-slate-800"}`}
     >
       {/* TopNavBar Wrapper */}
-      <div className="sticky top-0 z-[100] w-full pt-4 pointer-events-none print:hidden">
+      <div className="sticky top-0 z-40 w-full pt-4 pointer-events-none print:hidden">
         <nav
           className={cn(
             "pointer-events-auto mx-auto w-[94%] max-w-6xl glass-panel transition-all duration-300 shadow-xl dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] overflow-hidden",
@@ -426,7 +426,7 @@ export default function App() {
       <main
         className={cn(
           "flex-grow relative flex flex-col items-center w-full",
-          currentScreen !== "landing" && "pt-20"
+          currentScreen !== "landing" && "pt-2"
         )}
       >
         {currentScreen === "landing" && (
