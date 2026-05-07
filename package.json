@@ -3,6 +3,14 @@
   "private": true,
   "version": "0.0.0",
   "type": "module",
+  "homepage": "https://ais-pre-fbp2lwtj63yvnypnjzrqd5-892540931145.asia-southeast1.run.app",
+  "keywords": [
+    "ai",
+    "react",
+    "gemini",
+    "career",
+    "hackathon"
+  ],
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
