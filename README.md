@@ -48,23 +48,6 @@ Hexo is a talent intelligence engine powered by **Gemini 3.0 Flash** that maps y
 
 ---
 
-## 💻 Running Locally
-
-**Prerequisites:** Node.js v18+, npm or yarn, a [Gemini API Key](https://aistudio.google.com/app/apikey)
-
-```bash
-git clone <repository-url>
-cd hexo-career-ai
-npm install
-cp .env.example .env   # then add your GEMINI_API_KEY
-npm run dev            # http://localhost:3000
-```
-
-> [!IMPORTANT]
-> A valid `GEMINI_API_KEY` is required. Get one for free at [Google AI Studio](https://aistudio.google.com/app/apikey).
-
----
-
 ## 📐 The Scoring Algorithm
 
 > [!IMPORTANT]
