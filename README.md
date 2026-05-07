@@ -1,6 +1,6 @@
 # 🐝 Hexo — Find Your Missing Cell
 
-> *The gap in your profile isn't a weakness — it's a missing cell. Hexo shows those gaps and how to fill it.*
+*The gap in your profile isn't a weakness — it's a missing cell. Hexo shows those gaps and how to fill it.*
 
 **CodeKada Hackathon Entry** · Theme: *Build from Anywhere, Build Anything* · Track: *Intelligence Systems & Data*
 
