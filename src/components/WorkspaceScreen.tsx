@@ -299,7 +299,7 @@ export function WorkspaceScreen({
         }
 
         const encodedUrl = encodeURIComponent(urlToScrape);
-        const token = "cd04a6b3aded4feeac8351717d5ce11c112978d95fb";
+        const token = process.env.SCRAPE_DO_TOKEN;
         const scrapeApiUrl = `https://api.scrape.do/?url=${encodedUrl}&token=${token}`;
 
         const res = await fetch(scrapeApiUrl);
